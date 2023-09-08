@@ -1,7 +1,6 @@
 package com.polus.core.common.service;
 
 import java.beans.PropertyDescriptor;
-import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -9,7 +8,6 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Field;
 import java.math.BigDecimal;
@@ -625,24 +623,7 @@ public class CommonServiceImpl implements CommonService {
 
     @Override
 	public String getLogstashStatus() throws IOException {
-		Resource resource = null;
-		Boolean isWindows = System.getProperty("os.name").contains("Windows") ? Boolean.TRUE : Boolean.FALSE;
-		ProcessBuilder pb;
-		if (isWindows.equals(Boolean.TRUE)) {
-			resource = new ClassPathResource("logstashstatus.ps1");
-			pb = new ProcessBuilder("C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",Paths.get(resource.getURI()).toString());
-		} else {
-			resource = new ClassPathResource("logstashstatus.sh");
-			pb = new ProcessBuilder(Paths.get(resource.getURI()).toString());
-		}
-		Process p = pb.start();
-		BufferedReader br = new BufferedReader(new InputStreamReader(p.getInputStream()));
-		StringBuilder sb = new StringBuilder();
-		String line;
-		while ((line = br.readLine()) != null) {
-			sb.append(line);
-		}
-		return sb.toString();
+    	return elasticSyncOperation.getLogstashStatus();
 	}
 
     @Override

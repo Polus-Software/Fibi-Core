@@ -152,20 +152,28 @@ public class ExternalReviewerDaoImpl implements ExternalReviewerDao {
 		return session.createQuery(query).uniqueResult();
 	}
 	
+//	`criteriaBuilder.function()` is used to invoke a database-specific function that is not directly supported by the Criteria API itself.
+//	 "binary" function is a custom function specific to the database schema or ORM framework.
+//	 checks if the binary representation of the `primaryEmail` attribute is equal to the value stored in the `primaryEmail` variable.
 	@Override
 	public boolean checkUniqueUserName(String principalName) {
-		Session session = hibernateTemplate.getSessionFactory().getCurrentSession();
-		CriteriaBuilder builder = session.getCriteriaBuilder();
-		CriteriaQuery<String> query = builder.createQuery(String.class);
-		Root<ExternalReviewer> rootExternalReviewerExt = query.from(ExternalReviewer.class);
-		query.where(builder.equal(rootExternalReviewerExt.get("principalName"), principalName));
-		query.select(rootExternalReviewerExt.get("principalName"));
-		if (session.createQuery(query).uniqueResult() != null) {
+		try {
+			Session session = hibernateTemplate.getSessionFactory().getCurrentSession();
+			CriteriaBuilder builder = session.getCriteriaBuilder();
+			CriteriaQuery<Long> query = builder.createQuery(Long.class);
+			Root<ExternalReviewer> rootExternalReviewerExt = query.from(ExternalReviewer.class);
+			Predicate caseSensitivePredicate = builder.equal(
+					builder.function("binary", String.class, rootExternalReviewerExt.get("principalName")),
+					principalName);
+			query.select(builder.count(rootExternalReviewerExt));
+			query.where(caseSensitivePredicate);
+			Long count = session.createQuery(query).uniqueResult();
+			return count != null && count > 0;
+		} catch (Exception e) {
 			return true;
 		}
-		return false;
 	}
-	
+
 	@Override
 	public List<ExternalReviewerAttachmentType> fetchExternalReviewerAttachmentTypes() {
 		return hibernateTemplate.loadAll(ExternalReviewerAttachmentType.class);
@@ -673,4 +681,25 @@ public class ExternalReviewerDaoImpl implements ExternalReviewerDao {
 		session.createQuery(updateQuery).executeUpdate();
 	}
 
+//	`criteriaBuilder.function()` is used to invoke a database-specific function that is not directly supported by the Criteria API itself.
+//	 "binary" function is a custom function specific to the database schema or ORM framework.
+//	 checks if the binary representation of the `primaryEmail` attribute is equal to the value stored in the `primaryEmail` variable.
+	@Override
+	public boolean checkUniqueEmailAddress(String primaryEmail) {
+	    try {
+	        Session session = hibernateTemplate.getSessionFactory().getCurrentSession();
+	        CriteriaBuilder builder = session.getCriteriaBuilder();
+	        CriteriaQuery<Long> query = builder.createQuery(Long.class);
+	        Root<ExternalReviewer> rootExternalReviewerExt = query.from(ExternalReviewer.class);
+	        Predicate caseSensitivePredicate = builder.equal(
+	                builder.function("binary", String.class, rootExternalReviewerExt.get("primaryEmail")),
+	                primaryEmail);
+	        query.select(builder.count(rootExternalReviewerExt));
+	        query.where(caseSensitivePredicate);
+	        Long count = session.createQuery(query).uniqueResult();
+	        return count != null && count > 0;
+	    } catch (Exception e) {
+	        return true;
+	    }
+	}
 }

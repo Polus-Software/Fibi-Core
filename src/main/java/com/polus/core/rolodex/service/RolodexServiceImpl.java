@@ -13,6 +13,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.polus.core.common.dao.CommonDao;
+import com.polus.core.common.dto.ElasticQueueRequest;
+import com.polus.core.common.service.ElasticSyncOperation;
 import com.polus.core.constants.Constants;
 import com.polus.core.person.pojo.Person;
 import com.polus.core.pojo.Country;
@@ -34,6 +36,12 @@ public class RolodexServiceImpl implements RolodexService {
 
 	@Autowired
 	private CommonDao commonDao;
+
+	@Autowired
+	private ElasticQueueRequest elasticQueueRequest;
+		
+	@Autowired
+	private ElasticSyncOperation elasticSyncOperation;
 
 	private static final Boolean TRUE = true;
 	private static final Boolean FALSE = false;
@@ -81,7 +89,27 @@ public class RolodexServiceImpl implements RolodexService {
 			rolodexDao.deleteRolodex(rolodex);
 			vo.setMessage("Rolodex deleted successfully.");
 		}
+		if (vo.getRolodex() != null) {
+			setElasticRequestForRolodexSync(vo, acType);
+		}
 		return commonDao.convertObjectToJSON(vo);
+	}
+
+	private void setElasticRequestForRolodexSync(RolodexVO vo, String acType) {
+		if (Boolean.TRUE.equals(vo.getRolodex().isActive())) {
+			if (acType.equals("I")) {
+				elasticSyncOperation.addElasticQueueRequestToList(elasticQueueRequest, vo.getRolodex().getRolodexId().toString(), Constants.ELASTIC_ACTION_INSERT, Constants.ELASTIC_INDEX_ROLODEX);
+			} else if (acType.equals("D")) {
+				elasticSyncOperation.addElasticQueueRequestToList(elasticQueueRequest, vo.getRolodex().getRolodexId().toString(), Constants.ELASTIC_ACTION_DELETE, Constants.ELASTIC_INDEX_ROLODEX);
+			} else {
+				elasticSyncOperation.addElasticQueueRequestToList(elasticQueueRequest, vo.getRolodex().getRolodexId().toString(), Constants.ELASTIC_ACTION_DELETE, Constants.ELASTIC_INDEX_ROLODEX);
+				elasticSyncOperation.addElasticQueueRequestToList(elasticQueueRequest, vo.getRolodex().getRolodexId().toString(), Constants.ELASTIC_ACTION_INSERT, Constants.ELASTIC_INDEX_ROLODEX);
+			}
+		} else {
+			if (acType.equals("U")) {
+				elasticSyncOperation.addElasticQueueRequestToList(elasticQueueRequest, vo.getRolodex().getRolodexId().toString(), Constants.ELASTIC_ACTION_DELETE, Constants.ELASTIC_INDEX_ROLODEX);
+			}
+		}
 	}
 
 	@Override

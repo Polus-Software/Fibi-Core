@@ -299,4 +299,12 @@ public interface ExternalReviewerDao {
 	 */
 	public void externalReviewerExpire();
 
+	/**
+	* This method used for check any external reviewer has the specified email
+	* @param primaryEmail
+	* @return
+	*/
+	public boolean checkUniqueEmailAddress(String primaryEmail);
+
+
 }

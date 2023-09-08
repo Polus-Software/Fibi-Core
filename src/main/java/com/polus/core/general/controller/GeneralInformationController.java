@@ -27,6 +27,8 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.amazonaws.services.cloudwatch.model.Datapoint;
+import com.polus.core.applicationexception.service.ApplicationExceptionService;
+import com.polus.core.applicationexception.vo.ApplicationExceptionVO;
 import com.polus.core.common.dao.CommonDao;
 import com.polus.core.common.service.CommonService;
 import com.polus.core.general.service.GeneralInformationService;
@@ -51,6 +53,9 @@ public class GeneralInformationController {
 	@Autowired
 	@Qualifier(value = "generalInformationService")
 	private GeneralInformationService generalInformationService;
+	
+	@Autowired
+	private ApplicationExceptionService applicationExceptionService;
 
 	@PostMapping(value = "/getUnitName")
 	public String requestResearchSummaryData(@RequestBody CommonVO vo, HttpServletRequest request) throws Exception {
@@ -173,4 +178,10 @@ public class GeneralInformationController {
 	public Map<String, Map<String, List<Datapoint>>> queueMatrixDetails() {
 	return commonService.queueMatrixDetails();
 	}
+
+	@PostMapping(value = "/elasticErrorDetails", produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+    public String getElasticErrorDetails(HttpServletRequest request, HttpServletResponse response,
+            @RequestBody ApplicationExceptionVO applicationExceptionVO) throws Exception {
+        return applicationExceptionService.getElasticErrorDetails(applicationExceptionVO);
+    }
 }

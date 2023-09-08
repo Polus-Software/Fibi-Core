@@ -34,14 +34,10 @@ public interface ExternalUserDao {
 
 	public void assignPersonRole(Person person, Integer roleId);
 
-	public void assignPersonRoleRT(Person person, Integer roleId);
-
 	public String getHomeUnitFromOrganizationId(String organizationId);
 
 	public List<ExternalUser> getPendingExternalUserList();
 
 	public String getNextSequenceId(String nextSequenceId);
-
-	public List<String> getUnitsListByPersonIdAndRights(String personId);
 	
 }

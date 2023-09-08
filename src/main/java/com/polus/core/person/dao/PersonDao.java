@@ -10,7 +10,6 @@ import org.springframework.transaction.annotation.Transactional;
 import com.polus.core.person.pojo.DegreeType;
 import com.polus.core.person.pojo.Person;
 import com.polus.core.person.pojo.PersonDegree;
-import com.polus.core.person.pojo.PersonRoleRT;
 import com.polus.core.person.vo.PersonSearchResult;
 import com.polus.core.person.vo.PersonVO;
 import com.polus.core.roles.pojo.PersonRoles;
@@ -18,28 +17,6 @@ import com.polus.core.roles.pojo.PersonRoles;
 @Transactional
 @Service
 public interface PersonDao {
-
-	public List<PersonRoleRT> fetchCreateProposalPersonRole(String personId, String rightName);
-
-	public boolean fetchSuperUserPersonRole(String personId, String rightName);
-	
-	/**
-	 * This method will check if the user has a permission in any department
-	 * @param personId
-	 * @param permissionName
-	 * @return True : If has permission and false it doesn't have permission
-	 * 
-	 */
-	boolean isPersonHasPermissionInAnyDepartment(String personId,String permissionName);
-
-	/**
-	 * This method will check if the user has a permission in a particular department
-	 * @param personId
-	 * @param permissionName
-	 * @param unitNumber
-	 * @return True : If has permission and false it doesn't have permission
-	 */
-	boolean isPersonHasPermission(String personId,String permissionName,String unitNumber);
 
 	/**
 	 * This method will return the person details
@@ -105,14 +82,6 @@ public interface PersonDao {
 	 * @return person roles
 	 */
 	public List<PersonRoles> getPersonRoleByUnitNumberAndRoleId(String unitNumber, Integer roleId);
-
-	/**
-	 * This method is used to fetch person role rights from right name and unit number 
-	 * @param unitNumber
-	 * @param rightName
-	 * @return person role rights
-	 */
-	public List<PersonRoleRT> fetchPersonRoleRTByRightNameAndUnitNumber(String unitNumber, String rightName);
 
 	/**
 	 * This method is used to return person roles based on unit number and role id

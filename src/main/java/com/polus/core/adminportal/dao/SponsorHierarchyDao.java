@@ -60,13 +60,12 @@ public interface SponsorHierarchyDao {
                                 Integer sponsorGroupId);
 
     /**
-     * Finds All Not Added Sponsors In A Sponsor Hierarchy
+     * Finds Sponsors
      *
      * @param voObj
-     * @return sponsorCode, sponsorName, sponsor type description, acronym based on sponsorGroupId and searchWord
+     * @return sponsorCode, sponsorName, sponsor type description, acronym based on searchWord
      */
-    List<Object> findAllSponsorsNotInSponsorHierarchy(Integer sponsorGroupId, Map<String, String> voObj);
-
+    List<Object> findAllSponsors(Map<String, String> voObj);
 
     /**
      * Get All Distinct Sponsor Group Name By Search Word

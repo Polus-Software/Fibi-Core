@@ -1,5 +1,8 @@
 package com.polus.core.common.dto;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.springframework.context.annotation.Scope;
 import org.springframework.context.annotation.ScopedProxyMode;
 import org.springframework.stereotype.Component;
@@ -13,6 +16,8 @@ public class ElasticQueueRequest {
 	private String actionType;
 
 	private String indexName;
+	
+	private List<ElasticQueueRequest> elasticQueueRequestList;
 
 	public String getIndexName() {
 		return indexName;
@@ -40,7 +45,9 @@ public class ElasticQueueRequest {
 		this.actionType = source.actionType;
 		this.indexName = source.indexName;
 	}
+
 	public ElasticQueueRequest() {
+		setElasticQueueRequestList(new ArrayList<>());
 	}
 	
 	public String getModuleItemKey() {
@@ -48,6 +55,14 @@ public class ElasticQueueRequest {
 	}
 	public void setModuleItemKey(String moduleItemKey) {
 		this.moduleItemKey = moduleItemKey;
+	}
+
+	public List<ElasticQueueRequest> getElasticQueueRequestList() {
+		return elasticQueueRequestList;
+	}
+
+	public void setElasticQueueRequestList(List<ElasticQueueRequest> elasticQueueRequestList) {
+		this.elasticQueueRequestList = elasticQueueRequestList;
 	}
 
 }

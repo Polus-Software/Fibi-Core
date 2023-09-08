@@ -18,6 +18,7 @@ import javax.servlet.http.HttpServletRequest;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -131,7 +132,15 @@ public class ElasticSyncOperation {
 				session.close();
 			} else {
 				logger.info("Elastic sync operation with REST is enabled");
-				executorService.execute(()->syncElasticIndex(elasticSyncRequest));
+				if ("BULKSYNC".equals(elasticQueueRequest.getActionType())) {
+					try {
+						syncElasticIndex(elasticSyncRequest);
+					} catch (Exception e) {
+						throw new ApplicationException("Error occured in elastic bulk sync", e, ELASTIC_SYNC_ERROR);
+					}
+				} else {
+					executorService.execute(() -> syncElasticIndex(elasticSyncRequest));
+				}
 			}
 			awsStatus.setStatus("NO_ERROR");
 		} catch ( JMSException | AmazonSQSException e) {
@@ -140,8 +149,11 @@ public class ElasticSyncOperation {
 				emailTheError();
 			}
 			applicationExceptionService.saveErrorDetails( new ApplicationException("JMSException occured while calling the elaticSync application", e, ELASTIC_SYNC_ERROR), request);
+		} catch (ApplicationException e) {
+			throw e;
 		}
 		catch (Exception e) {
+			e.printStackTrace();
 			applicationExceptionService.saveErrorDetails( new ApplicationException("Error occured while calling the elaticSync application", e, ELASTIC_SYNC_ERROR), request);
 		}
 	}
@@ -158,7 +170,8 @@ public class ElasticSyncOperation {
 
 	private void syncElasticIndex(String elasticSyncRequest) {
 		RestTemplate restTemplate = new RestTemplate();
-		restTemplate.postForObject(elasticSyncUrl, elasticSyncRequest, String.class);
+		String postUrl = elasticSyncUrl + "elasticSync";
+		restTemplate.postForObject(postUrl, elasticSyncRequest, String.class);
 	}
 
 	public static String convertObjectToJSON(Object object) {
@@ -225,4 +238,48 @@ public class ElasticSyncOperation {
                 .withMetricName(metrixName)
                 .withStatistics("Sum").withEndTime(new Date());
     }
+
+	/**
+	 * This method is used to call sendSyncRequest after null checking all params 
+	 * * @param elasticQueueRequest - ElasticQueueRequest object
+	 */
+	public void initiateSyncForElasticQueueRequest(String moduleItemKey, String actionType, String indexName) {
+		if (moduleItemKey != null && actionType != null && indexName != null) {
+			sendSyncRequest(moduleItemKey, actionType, indexName);
+		}
+	}
+
+	/**
+	 * This method is used to send multiple sync requests
+	 * In such cases, the multiple sync requests will be added up in the elasticQueueRequestList within the ElasticQueueRequest object
+	 * Example scenario: when a proposal has been awarded, we need to update proposal elastic(proposal status update) as well as IP elastic (inserting IP)
+	 * @param elasticQueueRequest - ElasticQueueRequest object
+	 */
+	public void initiateSyncForElasticQueueRequestList(ElasticQueueRequest elasticQueueRequest) {
+		elasticQueueRequest.getElasticQueueRequestList().forEach(request -> 
+			initiateSyncForElasticQueueRequest(request.getModuleItemKey(), request.getActionType(), request.getIndexName())
+		);
+	}
+
+	/**
+	 * This method id used to add sync requests to the elasticQueueRequestList within the ElasticQueueRequest object
+	 * which will be used in the cases for sending multiple sync requests (refer method above)
+	 * @param elasticQueueRequest
+	 * @param moduleItemKey
+	 * @param actionType
+	 * @param indexName
+	 * @return elasticQueueRequest -  elasticQueueRequest object with the multiple requests added in the list within
+	 */
+	public ElasticQueueRequest addElasticQueueRequestToList(ElasticQueueRequest elasticQueueRequest, String moduleItemKey, String actionType, String indexName) {
+		ElasticQueueRequest tempElasticQueueRequest = new ElasticQueueRequest();
+		BeanUtils.copyProperties(elasticQueueRequest, tempElasticQueueRequest);
+		tempElasticQueueRequest.getElasticQueueRequestList().add(new ElasticQueueRequest(moduleItemKey, actionType, indexName));
+		return tempElasticQueueRequest;
+	}
+
+	public String getLogstashStatus() {
+		RestTemplate restTemplate = new RestTemplate();
+		String postUrl = elasticSyncUrl + "getLogstashStatus";
+		return restTemplate.postForObject(postUrl, null, String.class);
+	}
 }

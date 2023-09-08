@@ -18,7 +18,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.polus.core.common.dto.ElasticQueueRequest;
 import com.polus.core.common.service.CommonService;
+import com.polus.core.common.service.ElasticSyncOperation;
 import com.polus.core.person.pojo.Person;
 import com.polus.core.person.service.PersonService;
 import com.polus.core.person.vo.PersonSearchResult;
@@ -35,6 +37,12 @@ public class PersonController {
 	
 	@Autowired
 	public CommonService commonService;
+
+	@Autowired
+	private ElasticQueueRequest elasticQueueRequest;
+
+	@Autowired
+	private ElasticSyncOperation elasticSyncOperation;
 
 //	@Autowired
 //	@Qualifier(value = "dashboardService")
@@ -56,7 +64,9 @@ public class PersonController {
 	@PostMapping(value = "/saveOrUpdatePerson", produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
 	public String saveOrUpdatePerson(@RequestBody PersonVO vo, HttpServletRequest request, HttpServletResponse response) {
 		logger.info("Request for saveOrUpdatePerson");
-		return personService.saveOrUpdatePerson(vo);
+		String personResponse = personService.saveOrUpdatePerson(vo);
+		elasticSyncOperation.initiateSyncForElasticQueueRequestList(elasticQueueRequest);
+		return personResponse;
 	}
 
 	@PostMapping(value = "/getAllPersons", produces = MediaType.APPLICATION_JSON_UTF8_VALUE)

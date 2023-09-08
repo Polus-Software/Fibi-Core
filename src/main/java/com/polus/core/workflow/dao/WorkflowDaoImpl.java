@@ -472,35 +472,6 @@ public class WorkflowDaoImpl implements WorkflowDao {
 			query.where(builder.equal(rootWorkflowDetail.get("workflowDetailId"), workflowdetailId));
 			return session.createQuery(query).uniqueResult();
 	}
-	
-	@Override
-	public List<WorkflowDetail> getWorkflowDetails(Integer proposalId, String workFlowPersonId, Boolean isBypass) {
-		List<WorkflowDetail> result;
-		try {
-			Session session = hibernateTemplate.getSessionFactory().getCurrentSession();
-			CriteriaBuilder cb = session.getCriteriaBuilder();
-			CriteriaQuery<WorkflowDetail> cq = cb.createQuery(WorkflowDetail.class);
-			Root<WorkflowDetail> root = cq.from(WorkflowDetail.class);
-			Join<WorkflowDetail, Workflow> join = root.join("workflow");
-			if ((Boolean.FALSE).equals(isBypass)) {
-				cq.multiselect(root.get("mapNumber"), root.get("approvalStopNumber"))
-						.where(cb.and(cb.equal(join.get("moduleItemId"), proposalId),
-								cb.equal(join.get("isWorkflowActive"), true),
-								cb.equal(root.get("approverPersonId"), workFlowPersonId),
-								cb.equal(join.get("moduleCode"), 3), root.get("approvalStatusCode").in("W")));
-			} else {
-				cq.multiselect(root.get("mapNumber"), root.get("approvalStopNumber"))
-						.where(cb.and(cb.equal(join.get("moduleItemId"), proposalId),
-								cb.equal(join.get("isWorkflowActive"), true),
-								cb.equal(root.get("approverPersonId"), workFlowPersonId),
-								cb.equal(join.get("moduleCode"), 3), root.get("approvalStatusCode").in("W", "T")));
-			}
-			result = session.createQuery(cq).getResultList();
-		} catch (Exception e) {
-			result = null;
-		}
-		return result;
-	}
 
 	@Override
 	public void updateWorkflowProposalId(Integer newModuleItemId, Integer moduleItemId) {
@@ -511,6 +482,40 @@ public class WorkflowDaoImpl implements WorkflowDao {
 		update.set("moduleItemId", newModuleItemId.toString());
 		update.where(builder.equal(rootWorkflow.get("moduleItemId"), moduleItemId.toString())); 
 		session.createQuery(update).executeUpdate();	
+	}
+
+	/*The below query gets  person's count based on parameters moduleCode,moduleItemId, workFlowPersonId.Actions are differentiated based 
+	* on "approverStopNumber".If "Approve" or "Reject" action is taking place "approverStopNumber" and "mapId" will be null.For "Bypass" 
+	* action the count is taken by making use of stop number and map id along with other parameters*/
+	@Override
+	public long getApproverPersonCount(Integer moduleCode, Integer moduleItemId, String workFlowPersonId,
+			Integer approverStopNumber, Integer mapId) {
+		Session session = hibernateTemplate.getSessionFactory().getCurrentSession();
+		CriteriaBuilder cb = session.getCriteriaBuilder();
+		CriteriaQuery<Long> cq = cb.createQuery(Long.class);
+		Root<Workflow> Workflow = cq.from(Workflow.class);
+		Join<Workflow, WorkflowDetail> WorkflowDetail = Workflow.join("workflowDetails");
+		Predicate moduleItemIdPredicate = cb.equal(Workflow.get("moduleItemId"), moduleItemId);
+		Predicate isWorkflowActivePredicate = cb.equal(Workflow.get("isWorkflowActive"), true);
+		Predicate workFlowPersonIdPredicate = cb.equal(WorkflowDetail.get("approverPersonId"), workFlowPersonId);
+		Predicate moduleCodePredicate = cb.equal(Workflow.get("moduleCode"), moduleCode);
+		if (approverStopNumber != null) {
+			Predicate mapIdPredicate = cb.equal(WorkflowDetail.get("mapId"), mapId);
+			Predicate approverStopNumberPredicate = cb.equal(WorkflowDetail.get("approvalStopNumber"), approverStopNumber);
+			Predicate approvalStatusCodePredicate = WorkflowDetail.get("approvalStatusCode")
+					.in(Constants.WORKFLOW_STATUS_CODE_TO_BE_SUBMITTED, Constants.WORKFLOW_STATUS_CODE_WAITING);
+			cq.select(cb.count(WorkflowDetail.get("workflowDetailId")))
+					.where(cb.and(moduleItemIdPredicate, isWorkflowActivePredicate, workFlowPersonIdPredicate,
+							moduleCodePredicate, approvalStatusCodePredicate, mapIdPredicate,
+							approverStopNumberPredicate));
+		} else {
+			Predicate approvalStatusCodePredicate = WorkflowDetail.get("approvalStatusCode")
+					.in(Constants.WORKFLOW_STATUS_CODE_WAITING);
+			cq.select(cb.count(WorkflowDetail.get("workflowDetailId")))
+					.where(cb.and(moduleItemIdPredicate, isWorkflowActivePredicate, workFlowPersonIdPredicate,
+							moduleCodePredicate, approvalStatusCodePredicate));
+		}
+		return session.createQuery(cq).getSingleResult();
 	}
 	
 }

@@ -1,7 +1,5 @@
 package com.polus.core.constants;
 
-import java.math.BigDecimal;
-
 public interface Constants {
 
     String DATABASE_BOOLEAN_TRUE_STRING_REPRESENTATION = "Y";
@@ -74,7 +72,7 @@ public interface Constants {
 //    String WORKFLOW_STATUS_CODE_APPROVED = "A";
 //    String WORKFLOW_STATUS_CODE_REJECTED = "R";
 //    String WORKFLOW_STATUS_CODE_BYPASSED = "B";
-//    String WORKFLOW_STATUS_CODE_TO_BE_SUBMITTED = "T";
+    String WORKFLOW_STATUS_CODE_TO_BE_SUBMITTED = "T";
 //    String WORKFLOW_STATUS_CODE_APPROVED_BY_OTHER = "AO";
 //    String WORKFLOW_STATUS_CODE_REJECTED_BY_OTHER = "RO";
 //    String WORKFLOW_STATUS_CODE_APPROVAL_BYPASSED = "AB";
@@ -1606,5 +1604,20 @@ public interface Constants {
 //	
 //	String MANPOWER_INTERFACE_STATUS_OPEN = "1";
 //    String MANPOWER_INTERFACE_STATUS_FILLED = "2";
-	
+
+	 // Constants for Elastic Sync
+	   
+	String ELASTIC_ACTION_INSERT = "INSERT";
+	String ELASTIC_ACTION_UPDATE = "UPDATE";
+	String ELASTIC_ACTION_DELETE = "DELETE";
+   
+	String ELASTIC_INDEX_AWARD = "awardfibi";
+	String ELASTIC_INDEX_DEV_PROPOSAL = "fibiproposal";
+	String ELASTIC_INDEX_GRANT_CALL = "grantcall";
+	String ELASTIC_INDEX_INSTITUTE_PROPOSAL = "instituteproposal";
+	String ELASTIC_INDEX_PERSON = "fibiperson";
+	String ELASTIC_INDEX_ROLODEX = "fibirolodex";
+	String ELASTIC_INDEX_REVIEWER = "fibireviewer";
+	String ELASTIC_INDEX_AGREEMENT = "agreementfibi";
+
 }

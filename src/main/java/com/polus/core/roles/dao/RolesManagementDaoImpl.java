@@ -24,7 +24,9 @@ import org.springframework.orm.hibernate5.HibernateTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.polus.core.applicationexception.dto.ApplicationException;
 import com.polus.core.common.dao.CommonDao;
+import com.polus.core.constants.Constants;
 import com.polus.core.roles.pojo.ModuleDerivedRoles;
 import com.polus.core.roles.pojo.PersonRoles;
 import com.polus.core.roles.pojo.Rights;
@@ -195,6 +197,8 @@ public class RolesManagementDaoImpl implements RolesManagementDao {
 			rolesView.setUnitNumber(role[5].toString());
 			rolesView.setPrimaryTitle(role[6] == null ? null : role[6].toString());
 			rolesView.setDirectoryTitle(role[7] == null ? null : role[7].toString());
+			rolesView.setPersonHomeUnitName(role[8] == null ? null : role[8].toString());
+			rolesView.setPersonHomeUnitNumber(role[9] == null ? null : role[9].toString());
 			rolesViews.add(rolesView);
 		}
 		return commonDao.convertObjectToJSON(rolesViews);
@@ -515,6 +519,7 @@ public class RolesManagementDaoImpl implements RolesManagementDao {
 		} catch (Exception e) {
 			logger.error("Error occured in roleRIghtAuditTab : {}", e.getMessage());
 			e.printStackTrace();
+			throw new ApplicationException("Error occured in syncPersonRole", e, Constants.DB_PROC_ERROR);
 		} finally {
 			try {
 				if (statement != null) {

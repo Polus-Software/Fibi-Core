@@ -258,9 +258,21 @@ public interface WorkflowDao {
 	 * @return object Of WorkflowDetail 
 	 */
 	public WorkflowDetail getWorkFlowDetails(Integer workflowdetailId);
-	
-	public List<WorkflowDetail> getWorkflowDetails(Integer proposalId, String workFlowPersonId, Boolean isBypass);
 
 	public void updateWorkflowProposalId(Integer newActiveProposalId, Integer proposalId);
+
+	/**
+	 * The below method queries out count of person's based on approval status "W"
+	 * during "Approve or Reject" actions and queries out count of person's based on
+	 * approval status "W" and "T" during "Bypass" action by making use of other
+	 * details provided as parameter
+	 * @param moduleCode
+	 * @param awardId
+	 * @param workFlowPersonId
+	 * @param approvalStopNumber
+	 * @param mapId
+	 * @return long value
+	 */
+	public long getApproverPersonCount(Integer moduleCode, Integer awardId, String workFlowPersonId,Integer approvalStopNumber,Integer mapId);
 
 }

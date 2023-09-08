@@ -2,6 +2,7 @@ package com.polus.core.businessrule.controller;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.validation.Valid;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -58,7 +59,7 @@ public class BusinessRuleController {
 	}
 
 	@PostMapping(value = "/evaluateValidationRule", produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
-	public String evaluateValidationRule(@RequestBody EvaluateValidationRuleVO evaluateValidationRuleVO, HttpServletRequest request, HttpServletResponse response) {
+	public String evaluateValidationRule(@Valid @RequestBody EvaluateValidationRuleVO evaluateValidationRuleVO, HttpServletRequest request, HttpServletResponse response) {
 		logger.info("Requesting for evaluateValidationRule");
 		Claims claims = commonService.getLoginPersonDetailFromJWT(request);
 		evaluateValidationRuleVO.setLogginPersonId(claims.get(Constants.LOGIN_PERSON_ID).toString());

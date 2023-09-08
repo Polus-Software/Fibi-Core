@@ -20,6 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.polus.core.auditlog.pojo.AuditLogConfig;
 import com.polus.core.auditlog.report.service.AuditReportQueryBuilder;
 import com.polus.core.auditlog.vo.AuditLogInfo;
+import com.polus.core.person.dao.PersonDao;
 
 @Transactional
 @Service
@@ -30,6 +31,9 @@ public class AuditReportDaoImpl implements AuditReportDao {
 	
 	@Autowired
 	private AuditReportQueryBuilder auditReportQueryBuilder;
+
+	@Autowired
+	private PersonDao persondao;
 
 	@SuppressWarnings("unchecked")
 	@Override
@@ -51,7 +55,7 @@ public class AuditReportDaoImpl implements AuditReportDao {
 			auditLogInfo.setActionPersonId(Objects.toString(auditLogInfoObject[4], null));
 			auditLogInfo.setChanges(Objects.toString(auditLogInfoObject[5], null));
 			auditLogInfo.setActionType(Objects.toString(auditLogInfoObject[6], null));
-			auditLogInfo.setUpdateUser(Objects.toString(auditLogInfoObject[7], null));
+			auditLogInfo.setUpdateUser(persondao.getUserFullNameByUserName(Objects.toString(auditLogInfoObject[7], null)));
 			if (auditLogInfoObject[8] != null)
 				auditLogInfo.setUpdateTimestamp((Timestamp) auditLogInfoObject[8]);
 			auditLogInfoList.add(auditLogInfo);

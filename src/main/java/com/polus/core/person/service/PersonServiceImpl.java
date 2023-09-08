@@ -23,12 +23,15 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.polus.core.applicationexception.dto.ApplicationException;
 import com.polus.core.common.dao.CommonDao;
+import com.polus.core.common.dto.ElasticQueueRequest;
 import com.polus.core.common.service.CommonService;
+import com.polus.core.common.service.ElasticSyncOperation;
 import com.polus.core.constants.Constants;
 import com.polus.core.person.dao.PersonDao;
 import com.polus.core.person.pojo.Person;
 import com.polus.core.person.vo.PersonSearchResult;
 import com.polus.core.person.vo.PersonVO;
+import com.polus.core.roles.dao.PersonRoleRightDao;
 import com.polus.core.roles.pojo.PersonRoles;
 import com.polus.core.security.AuthenticatedUser;
 
@@ -49,7 +52,16 @@ public class PersonServiceImpl implements PersonService {
 	
 	@Autowired
     private HibernateTemplate hibernateTemplate;
-       
+
+	@Autowired
+	private ElasticQueueRequest elasticQueueRequest;
+		
+	@Autowired
+	private ElasticSyncOperation elasticSyncOperation;
+
+	@Autowired
+	private PersonRoleRightDao personRoleRightDao;
+ 
     @Value("${oracledb}")
     private String oracledb;
 
@@ -61,8 +73,8 @@ public class PersonServiceImpl implements PersonService {
 		String personId = vo.getPersonId();
 		HttpStatus httpStatus = HttpStatus.OK;
 		if ((vo.getPersonId() != null && vo.getPersonId().equals(AuthenticatedUser.getLoginPersonId()))
-				|| personDao.isPersonHasPermissionInAnyDepartment(AuthenticatedUser.getLoginPersonId(),
-						Constants.MAINTAIN_PERSON_RIGHT_NAME)) {
+				|| personRoleRightDao.isPersonHasPermission(AuthenticatedUser.getLoginPersonId(),
+						Constants.MAINTAIN_PERSON_RIGHT_NAME, null)) {
 			Person person = personDao.getPersonDetailById(personId);
 			vo.setPerson(person);
 			return new ResponseEntity<>(commonDao.convertObjectToJSON(vo), httpStatus);
@@ -88,17 +100,20 @@ public class PersonServiceImpl implements PersonService {
 			}
 			if (acType != null && acType.equals("I")) {
 				if (personDao.checkUniquePrincipalName(person.getPrincipalName()) == FALSE) {
-					 if (oracledb.equalsIgnoreCase("Y")) {
-                         String nextSequenceId = getNextSeq("SEQ_PERSON_ID");
-                         logger.info("getNextSeq : " +nextSequenceId);
-                         person.setPersonId(nextSequenceId);
-                 } else {
+					if (oracledb.equalsIgnoreCase("Y")) {
+						String nextSequenceId = getNextSeq("SEQ_PERSON_ID");
+						logger.info("getNextSeq : " + nextSequenceId);
+						person.setPersonId(nextSequenceId);
+					} else {
 //                         String nextSequenceId = getNextSeqMySql("SELECT IFNULL(MAX(cast(PERSON_ID as decimal(40,0))),1000)+1  FROM PERSON");
-                         String nextSequenceId = getNextSeqMySql("SELECT IFNULL(MAX(CONVERT(PERSON_ID, SIGNED INTEGER)),100)+1 FROM PERSON");
-                         logger.info("getNextSeq : " + nextSequenceId);
-                         person.setPersonId(nextSequenceId);
-                 }
-
+						String nextSequenceId = getNextSeqMySql(
+								"SELECT IFNULL(MAX(CONVERT(PERSON_ID, SIGNED INTEGER)),100)+1 FROM PERSON");
+						logger.info("getNextSeq : " + nextSequenceId);
+						person.setPersonId(nextSequenceId);
+					}
+					if (person.getStatus().equalsIgnoreCase("I")) {
+						person.setDateOfInactive(commonDao.getCurrentTimestamp());
+					}
 					person = personDao.saveOrUpdatePerson(person);
 					vo.setMessage("Person saved Successfully");
 					vo.setPerson(person);
@@ -126,10 +141,40 @@ public class PersonServiceImpl implements PersonService {
 				personDao.deletePerson(person);
 				vo.setMessage("Person deleted successfully");
 			}
+			if (vo.getPerson() != null) {
+				setElasticRequestForPersonSync(vo, acType);
+			}
 		} catch (GeneralSecurityException e) {
 			logger.error("error in saveOrUpdatePerson: {}", e.getMessage());
 		}
 		return commonDao.convertObjectToJSON(vo);
+	}
+
+	private void setElasticRequestForPersonSync(PersonVO vo, String acType) {
+		if (vo.getPerson().getStatus().equals("A")) {
+			if (acType.equals("I")) {
+				elasticSyncOperation.addElasticQueueRequestToList(elasticQueueRequest,
+						vo.getPerson().getPersonId().toString(), Constants.ELASTIC_ACTION_INSERT,
+						Constants.ELASTIC_INDEX_PERSON);
+			} else if (acType.equals("D")) {
+				elasticSyncOperation.addElasticQueueRequestToList(elasticQueueRequest,
+						vo.getPerson().getPersonId().toString(), Constants.ELASTIC_ACTION_DELETE,
+						Constants.ELASTIC_INDEX_PERSON);
+			} else {
+				elasticSyncOperation.addElasticQueueRequestToList(elasticQueueRequest,
+						vo.getPerson().getPersonId().toString(), Constants.ELASTIC_ACTION_DELETE,
+						Constants.ELASTIC_INDEX_PERSON);
+				elasticSyncOperation.addElasticQueueRequestToList(elasticQueueRequest,
+						vo.getPerson().getPersonId().toString(), Constants.ELASTIC_ACTION_INSERT,
+						Constants.ELASTIC_INDEX_PERSON);
+			}
+		} else {
+			if (acType.equals("U")) {
+				elasticSyncOperation.addElasticQueueRequestToList(elasticQueueRequest,
+						vo.getPerson().getPersonId().toString(), Constants.ELASTIC_ACTION_DELETE,
+						Constants.ELASTIC_INDEX_PERSON);
+			}
+		}
 	}
 
 	@Override

@@ -51,8 +51,6 @@ import com.polus.core.pojo.ActivityType;
 import com.polus.core.pojo.Unit;
 import com.polus.core.pojo.UnitAdministrator;
 import com.polus.core.pojo.UnitAdministratorType;
-import com.polus.core.security.AuthenticatedUser;
-
 import oracle.jdbc.OracleTypes;
 
 @SuppressWarnings("deprecation")
@@ -235,8 +233,6 @@ public class UnitHierarchyDaoImpl implements UnitHierarchyDao {
 			Root<UnitAdministrator> unitAdministratorRoot = criteriaUpdate.from(UnitAdministrator.class);
 			criteriaUpdate.set("personId", unitAdministrator.getPersonId());
 			criteriaUpdate.set("unitAdministratorTypeCode", unitAdministrator.getUnitAdministratorTypeCode());
-			criteriaUpdate.set("updateTimestamp", commonDao.getCurrentTimestamp());
-			criteriaUpdate.set("updateUser", AuthenticatedUser.getLoginUserName());
 			Predicate oldPersonIdPredicate = cb.equal(unitAdministratorRoot.get("personId"), unitAdministrator.getOldPersonId());
 			Predicate oldTypeCodePredicate = cb.equal(unitAdministratorRoot.get("unitAdministratorTypeCode"), unitAdministrator.getOldUnitAdministratorTypeCode());
 			Predicate unitNumberPredicate = cb.equal(unitAdministratorRoot.get("unitNumber"), unitAdministrator.getUnitNumber());

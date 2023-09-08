@@ -9,17 +9,23 @@ import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Convert;
 import javax.persistence.Entity;
+import javax.persistence.EntityListeners;
 import javax.persistence.FetchType;
 import javax.persistence.Id;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.persistence.Transient;
 
+import org.springframework.data.annotation.LastModifiedBy;
+import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
+
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.polus.core.util.JpaCharBooleanConversion;
 
 @Entity
 @Table(name = "UNIT")
+@EntityListeners(AuditingEntityListener.class)
 public class Unit implements Serializable {
 
 	private static final long serialVersionUID = 1L;
@@ -41,9 +47,11 @@ public class Unit implements Serializable {
 	@Convert(converter = JpaCharBooleanConversion.class)
 	private boolean active;
 
+	@LastModifiedDate
 	@Column(name = "UPDATE_TIMESTAMP")
 	private Timestamp updateTimestamp;
 
+	@LastModifiedBy
 	@Column(name = "UPDATE_USER")
 	private String updateUser;
 

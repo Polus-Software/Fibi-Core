@@ -15,11 +15,13 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.transaction.Transactional;
 
@@ -55,6 +57,8 @@ import com.polus.core.notification.email.vo.EmailServiceVO;
 import com.polus.core.notification.pojo.NotificationRecipient;
 import com.polus.core.person.dao.PersonDao;
 import com.polus.core.person.pojo.Person;
+import com.polus.core.pojo.Unit;
+import com.polus.core.roles.dao.PersonRoleRightDao;
 import com.polus.core.security.AuthenticatedUser;
 import com.polus.core.sftpconfiguration.SftpConfigurationService;
 import com.polus.core.useractivitylog.dao.UserActivityLogDao;
@@ -96,14 +100,18 @@ public class ExternalUserServiceImpl implements ExternalUserService {
 	@Autowired
 	private UserActivityLogDao userActivityLogDao;
 
+	@Autowired
+	private PersonRoleRightDao personRoleRightDao;
+
 	private static final String EMAILBODY_STRUCTURE = "Please go to ";
 	private static final String EMAILBODY_FILE_LOC = "  to view the files<br/>";
 
 	@Override
 	public String fetchExternalUserDetails(HomeVo vo) {
 		List<ExternalUser> externalUser = null;
-		String personId = AuthenticatedUser.getLoginPersonId();
-		List<String> units = externalUserDao.getUnitsListByPersonIdAndRights(personId);
+		List<String> units = personRoleRightDao
+				.fetchUnitsBasedOnPersonAndRight(Arrays.asList("MAINTAIN_EXTERNAL_USER"), AuthenticatedUser.getLoginPersonId(), "")
+				.stream().map(Unit::getUnitNumber).collect(Collectors.toList());
 		if (units != null && !units.isEmpty()) {
 			externalUser = externalUserDao.fetchAllExternalUserDetails(units);
 			if (externalUser != null && !externalUser.isEmpty()) {
@@ -158,7 +166,6 @@ public class ExternalUserServiceImpl implements ExternalUserService {
 			}
 			personDao.saveOrUpdatePerson(person);
 			externalUserDao.assignPersonRole(person, Constants.EXTERNAL_USER_ACCESS);
-			externalUserDao.assignPersonRoleRT(person, Constants.EXTERNAL_USER_ACCESS);
 		} else if (vo.getVerifiedFlag().equals(Constants.REJECTED_USER)) {
 			sendRejectedNotificatoinExternalUser(externalUser);
 		} else if (vo.getVerifiedFlag().equals(Constants.DEACTIVATED_USER)) {

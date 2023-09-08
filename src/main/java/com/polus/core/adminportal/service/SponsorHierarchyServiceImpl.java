@@ -177,12 +177,11 @@ public class SponsorHierarchyServiceImpl implements SponsorHierarchyService {
     }
 
     @Override
-    public ResponseEntity<Object> getNotAddedSponsorsInSH(Integer rootGroupId, Map<String, String> voObj) {
+    public ResponseEntity<Object> getSponsors(Map<String, String> voObj) {
         try {
-            if (rootGroupId == null || voObj == null || voObj.isEmpty())
+        	if (voObj == null || voObj.isEmpty())
                 return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
-            List<Object> sponsors = sponsorHierarchyDao.findAllSponsorsNotInSponsorHierarchy(rootGroupId,
-                    voObj);
+        	List<Object> sponsors = sponsorHierarchyDao.findAllSponsors(voObj);
             List<SponsorDto> sponsorDtos = new ArrayList<>();
             sponsors.forEach(sponsorObj -> {
                 Object[] obj = (Object[]) sponsorObj;
@@ -195,7 +194,7 @@ public class SponsorHierarchyServiceImpl implements SponsorHierarchyService {
             });
             return new ResponseEntity<>(sponsorDtos, HttpStatus.OK);
         } catch (Exception e) {
-            logger.error(" Exception in getNotAddedSponsorsInSH : {}", e.getMessage());
+            logger.error(" Exception in getSponsors : {}", e.getMessage());
             return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
