@@ -128,6 +128,9 @@ public class ExternalReviewer implements Serializable {
 	@Transient
 	private String hindex;
 
+	@Transient
+	private Boolean isEmailChange = false;
+
 	public Integer getExternalReviewerId() {
 		return externalReviewerId;
 	}
@@ -374,6 +377,14 @@ public class ExternalReviewer implements Serializable {
 
 	public void setHindex(String hindex) {
 		this.hindex = hindex;
+	}
+
+	public Boolean getIsEmailChange() {
+		return isEmailChange;
+	}
+
+	public void setIsEmailChange(Boolean isEmailChange) {
+		this.isEmailChange = isEmailChange;
 	}
 
 }

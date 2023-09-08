@@ -29,7 +29,6 @@ public class ApplicationErrorDetails implements Serializable {
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Integer id;
 
-	@JsonIgnore
 	@Column(name = "ERROR_CODE")
 	private String errorCode;
 

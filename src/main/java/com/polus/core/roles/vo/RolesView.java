@@ -18,6 +18,10 @@ public class RolesView {
 
 	private String directoryTitle;
 
+	private String personHomeUnitName;
+
+	private String personHomeUnitNumber;
+
 	public String getUserName() {
 		return userName;
 	}
@@ -80,6 +84,22 @@ public class RolesView {
 
 	public void setDirectoryTitle(String directoryTitle) {
 		this.directoryTitle = directoryTitle;
+	}
+
+	public String getPersonHomeUnitName() {
+		return personHomeUnitName;
+	}
+
+	public void setPersonHomeUnitName(String personHomeUnitName) {
+		this.personHomeUnitName = personHomeUnitName;
+	}
+
+	public String getPersonHomeUnitNumber() {
+		return personHomeUnitNumber;
+	}
+
+	public void setPersonHomeUnitNumber(String personHomeUnitNumber) {
+		this.personHomeUnitNumber = personHomeUnitNumber;
 	}
 
 }

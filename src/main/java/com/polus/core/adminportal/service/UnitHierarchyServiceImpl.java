@@ -24,7 +24,6 @@ import com.polus.core.constants.Constants;
 import com.polus.core.pojo.Unit;
 import com.polus.core.pojo.UnitAdministrator;
 import com.polus.core.pojo.UnitAdministratorType;
-import com.polus.core.security.AuthenticatedUser;
 
 @Transactional
 @Service(value = "unitHierarchyService")
@@ -81,9 +80,7 @@ public class UnitHierarchyServiceImpl implements UnitHierarchyService {
 					unitAdministrator.setUnit(unit);
 					UnitAdministratorType unitAdministratorType = unitHierarchyDao.getUnitAdministratorTypeByCode(unitAdministrator.getUnitAdministratorTypeCode());
 					unitAdministrator.setUnitAdministratorType(unitAdministratorType);
-					unitAdministrator.setUpdateTimestamp(commonDao.getCurrentTimestamp());
 					unitAdministrator.setUnitNumber(unit.getUnitNumber());
-					unitAdministrator.setUpdateUser(AuthenticatedUser.getLoginUserName());
 				}
 				response = unitHierarchyDao.addNewUnitAdministrator(unitAdministrator, acType);
 			}
@@ -98,10 +95,7 @@ public class UnitHierarchyServiceImpl implements UnitHierarchyService {
 	}
 
 	private String saveUnit(Unit unit) {
-		String response = null;
-		unit.setUpdateTimestamp(commonDao.getCurrentTimestamp());
-		response = unitHierarchyDao.addNewUnit(unit);
-		return response;
+		return unitHierarchyDao.addNewUnit(unit);
 	}
 
 	@Override

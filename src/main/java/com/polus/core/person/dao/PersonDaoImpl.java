@@ -5,7 +5,6 @@ import java.io.FileOutputStream;
 import java.sql.Timestamp;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
@@ -41,7 +40,6 @@ import com.polus.core.constants.Constants;
 import com.polus.core.person.pojo.DegreeType;
 import com.polus.core.person.pojo.Person;
 import com.polus.core.person.pojo.PersonDegree;
-import com.polus.core.person.pojo.PersonRoleRT;
 import com.polus.core.person.vo.PersonSearchResult;
 import com.polus.core.person.vo.PersonVO;
 import com.polus.core.roles.pojo.PersonRoles;
@@ -63,71 +61,6 @@ public class PersonDaoImpl implements PersonDao {
 	
 	@Value("${log.filepath}")
 	private String filePath;
-
-	@Override
-	public List<PersonRoleRT> fetchCreateProposalPersonRole(String personId, String rightName) {
-		List<PersonRoleRT> personRoles = null;
-		Session session = hibernateTemplate.getSessionFactory().getCurrentSession();
-		CriteriaBuilder builder = session.getCriteriaBuilder();
-		CriteriaQuery<PersonRoleRT> query = builder.createQuery(PersonRoleRT.class);
-		Root<PersonRoleRT> rootPersonRole = query.from(PersonRoleRT.class);
-		Predicate predicate1 = builder.equal(rootPersonRole.get("personRoleRTAttributes").get("personId"), personId);
-		Predicate predicate2 = builder.equal(rootPersonRole.get("personRoleRTAttributes").get("rightName"), rightName);
-		query.where(builder.and(predicate1, predicate2));
-		query.distinct(true);
-		personRoles = session.createQuery(query).getResultList();
-		logger.debug(personRoles.size());
-		return personRoles;
-	}
-
-	@Override
-	public boolean fetchSuperUserPersonRole(String personId, String rightName) {
-		boolean isSuperUser = false;
-		Session session = hibernateTemplate.getSessionFactory().getCurrentSession();
-		CriteriaBuilder builder = session.getCriteriaBuilder();
-		CriteriaQuery<PersonRoleRT> query = builder.createQuery(PersonRoleRT.class);
-		Root<PersonRoleRT> rootPersonRole = query.from(PersonRoleRT.class);
-		Predicate predicate1 = builder.equal(rootPersonRole.get("personRoleRTAttributes").get("personId"), personId);
-		Predicate predicate2 = builder.equal(rootPersonRole.get("personRoleRTAttributes").get("rightName"), rightName);
-		query.where(builder.and(predicate1, predicate2));
-		List<PersonRoleRT> personRoles = session.createQuery(query).getResultList();
-		if (personRoles != null && !personRoles.isEmpty()) {
-			isSuperUser = true;
-		}
-		return isSuperUser;
-	}
-
-	@Override
-	public boolean isPersonHasPermissionInAnyDepartment(String personId, String permissionName) {
-		Session session = hibernateTemplate.getSessionFactory().getCurrentSession();
-		CriteriaBuilder builder = session.getCriteriaBuilder();
-		CriteriaQuery<PersonRoleRT> query = builder.createQuery(PersonRoleRT.class);
-		Root<PersonRoleRT> root = query.from(PersonRoleRT.class);
-		Predicate predicate1 = builder.equal(root.get("personRoleRTAttributes").get("personId"), personId);
-		Predicate predicate2 = builder.equal(root.get("personRoleRTAttributes").get("rightName"), permissionName);
-		query.where(builder.and(predicate1, predicate2));
-		boolean noResults = session.createQuery(query).list().isEmpty();
-		return noResults == true ? false : true;
-
-	}
-
-	@Override
-	public boolean isPersonHasPermission(String personId,String permissionName,String unitNumber) {
-	    return isPersonHasPermission(personId, Arrays.asList(permissionName.split(",")), unitNumber);
-	}
-
-	 private boolean isPersonHasPermission(String personId, List<String> permissionName, String unitNumber) {
-		Session session = hibernateTemplate.getSessionFactory().getCurrentSession();
-		CriteriaBuilder builder = session.getCriteriaBuilder();
-		CriteriaQuery<PersonRoleRT> query = builder.createQuery(PersonRoleRT.class);
-		Root<PersonRoleRT> root = query.from(PersonRoleRT.class);
-		Predicate predicate1 = builder.equal(root.get("personRoleRTAttributes").get("personId"), personId);
-		Predicate predicate2 = builder.in(root.get("personRoleRTAttributes").get("rightName")).value(permissionName);
-		Predicate predicate3 = builder.equal(root.get("personRoleRTAttributes").get("unitNumber"), unitNumber);
-		query.where(builder.and(predicate1, predicate2, predicate3));
-		boolean noResults = session.createQuery(query).list().isEmpty();
-		return noResults == true ? false : true;
-	}
 
 	@Override
 	public Person getPersonDetailById(String personId) {
@@ -324,19 +257,6 @@ public class PersonDaoImpl implements PersonDao {
 		Predicate predicate2 = builder.equal(root.get("roleId"), roleId);
 		query.where(builder.and(predicate1, predicate2));
 		return session.createQuery(query).getResultList();
-	}
-
-	@Override
-	public List<PersonRoleRT> fetchPersonRoleRTByRightNameAndUnitNumber(String unitNumber, String rightName) {
-		Session session = hibernateTemplate.getSessionFactory().getCurrentSession();
-		CriteriaBuilder builder = session.getCriteriaBuilder();
-		CriteriaQuery<PersonRoleRT> query = builder.createQuery(PersonRoleRT.class);
-		Root<PersonRoleRT> rootPersonRole = query.from(PersonRoleRT.class);
-		Predicate predicate1 = builder.equal(rootPersonRole.get("personRoleRTAttributes").get("unitNumber"), unitNumber);
-		Predicate predicate2 = builder.equal(rootPersonRole.get("personRoleRTAttributes").get("rightName"), rightName);
-		query.where(builder.and(predicate1, predicate2));
-		query.distinct(true);
-        return session.createQuery(query).getResultList();
 	}
 
 	@Override

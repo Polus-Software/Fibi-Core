@@ -22,7 +22,9 @@ import org.springframework.web.multipart.MultipartFile;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.polus.core.applicationexception.dto.ApplicationException;
 import com.polus.core.common.dao.CommonDao;
+import com.polus.core.common.dto.ElasticQueueRequest;
 import com.polus.core.common.service.CommonService;
+import com.polus.core.common.service.ElasticSyncOperation;
 import com.polus.core.constants.Constants;
 import com.polus.core.externalreviewer.dao.ExternalReviewerDao;
 import com.polus.core.externalreviewer.pojo.CoiWithPerson;
@@ -64,18 +66,38 @@ public class ExternalReviewerServiceImpl implements ExternalReviewerService {
 	@Qualifier(value = "personDao")
 	private PersonDao personDao;
 
+	@Autowired
+	private ElasticQueueRequest elasticQueueRequest;
+
+	@Autowired
+	private ElasticSyncOperation elasticSyncOperation;
+
 	@Override
 	public String saveOrUpdateReviewerDetails(ExternalReviewerVo vo) {
 		try {
 			ExternalReviewer extReviewer = vo.getExtReviewer();
 			String password = null;
 			ExternalReviewerRights externalReviewerRight = new ExternalReviewerRights();
-			if ((extReviewer.getExternalReviewerId() == null || (extReviewer.getExternalReviewerId() != null
-					&& Boolean.TRUE.equals(extReviewer.getIsUsernameChange())))
-					&& Boolean.TRUE.equals(externalReviewerDao.checkUniqueUserName(extReviewer.getPrincipalName()))) {
-				vo.setMessage("Username already exists");
-				vo.setExtReviewer(null);
-				return commonDao.convertObjectToJSON(vo);
+			StringBuilder message = new StringBuilder();
+			Integer externalReviewerId = extReviewer.getExternalReviewerId();
+			String acType = externalReviewerId == null ? "I" : "U";
+			boolean isUniqueUserName = externalReviewerDao.checkUniqueUserName(extReviewer.getPrincipalName());
+			boolean isUniqueEmailAddress = externalReviewerDao.checkUniqueEmailAddress(extReviewer.getPrimaryEmail());
+			if (Boolean.TRUE.equals(extReviewer.getIsUsernameChange()) || Boolean.TRUE.equals(extReviewer.getIsEmailChange()) || externalReviewerId == null) {
+				if (Boolean.TRUE.equals(isUniqueUserName)
+						&& ((externalReviewerId != null && Boolean.TRUE.equals(extReviewer.getIsUsernameChange())) || externalReviewerId == null)) {
+					message.append("Username already exists");
+				}
+				 if (Boolean.TRUE.equals(isUniqueEmailAddress)
+						&& ((externalReviewerId != null && Boolean.TRUE.equals(extReviewer.getIsEmailChange())) || externalReviewerId == null)) {
+					message.append(" && Primary email already exists");
+				}
+				 if (Boolean.TRUE.equals(isUniqueUserName)
+						|| Boolean.TRUE.equals(isUniqueEmailAddress)) {
+					vo.setMessage(message.toString());
+					vo.setExtReviewer(null);
+					return commonDao.convertObjectToJSON(vo);
+				}
 			}
 			if (extReviewer.getExternalReviewerId() == null) {
 				String characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789@*_";
@@ -97,10 +119,24 @@ public class ExternalReviewerServiceImpl implements ExternalReviewerService {
 				sendExternalReviewerPasswordMail(extReviewer.getPrimaryEmail(),extReviewer.getExternalReviewerId(), password);
 			}
 			vo.setMessage("External reviewer details saved successfully");
+			setElasticSyncRequestForExternalReviewer(vo, acType);
 		} catch (Exception e) {
 			throw new ApplicationException("error in saveOrUpdateReviewerDetails", e, Constants.JAVA_ERROR);
 		}
 		return commonDao.convertObjectToJSON(vo);
+	}
+
+	private void setElasticSyncRequestForExternalReviewer(ExternalReviewerVo vo, String acType) {
+		if (vo.getExtReviewer().getStatus().equals("A")) {
+			if (acType.equals("I")) {
+				elasticSyncOperation.addElasticQueueRequestToList(elasticQueueRequest, vo.getExtReviewer().getExternalReviewerId().toString(), Constants.ELASTIC_ACTION_INSERT, Constants.ELASTIC_INDEX_REVIEWER);
+			} else {
+				elasticSyncOperation.addElasticQueueRequestToList(elasticQueueRequest, vo.getExtReviewer().getExternalReviewerId().toString(), Constants.ELASTIC_ACTION_DELETE, Constants.ELASTIC_INDEX_REVIEWER);
+				elasticSyncOperation.addElasticQueueRequestToList(elasticQueueRequest, vo.getExtReviewer().getExternalReviewerId().toString(), Constants.ELASTIC_ACTION_INSERT, Constants.ELASTIC_INDEX_REVIEWER);
+			}
+		} else {
+			elasticSyncOperation.addElasticQueueRequestToList(elasticQueueRequest, vo.getExtReviewer().getExternalReviewerId().toString(), Constants.ELASTIC_ACTION_DELETE, Constants.ELASTIC_INDEX_REVIEWER);
+		}
 	}
 
 	private void sendExternalReviewerPasswordMail(String emailAddress, Integer externalReviewerId, String password) {
@@ -173,10 +209,21 @@ public class ExternalReviewerServiceImpl implements ExternalReviewerService {
 			externalReviewerRight.setUpdateUser(AuthenticatedUser.getLoginUserName());
 			externalReviewerDao.saveOrUpdateExternalReviewerRights(externalReviewerRight);
 			vo.setMessage("External User Access details saved successfully");
+			setElasticSyncRequestForUserAccess(vo);
 		} catch (Exception e) {
 			throw new ApplicationException("error in saveOrUpdateuserAccess", e, Constants.JAVA_ERROR);
 		}
 		return commonDao.convertObjectToJSON(vo);
+	}
+
+	private void setElasticSyncRequestForUserAccess(ExternalReviewerVo vo) {
+		if (externalReviewerDao.getExtReviewerDetailById(vo.getExternalReviewerRight().getExternalReviewerId()).getStatus().equals("A")) {
+			if (vo.getExternalReviewerRight().getReviewerRightId().equals(Constants.REVIEWER)) {
+				elasticQueueRequest.setActionType(Constants.ELASTIC_ACTION_INSERT);
+			} else {
+				elasticQueueRequest.setActionType(Constants.ELASTIC_ACTION_DELETE);
+			}
+		}	
 	}
 
 	@Override

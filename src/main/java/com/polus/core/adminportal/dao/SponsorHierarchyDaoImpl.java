@@ -1,11 +1,17 @@
 package com.polus.core.adminportal.dao;
 
 import java.sql.Timestamp;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
+import javax.persistence.TypedQuery;
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Predicate;
+import javax.persistence.criteria.Root;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.orm.hibernate5.HibernateTemplate;
@@ -13,6 +19,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.polus.core.adminportal.pojo.SponsorHierarchy;
+import com.polus.core.pojo.Sponsor;
 
 @Transactional
 @Service(value = "sponsorHierarchyDao")
@@ -62,19 +69,28 @@ public class SponsorHierarchyDaoImpl implements SponsorHierarchyDao{
     }
 
     @Override
-    public List<Object> findAllSponsorsNotInSponsorHierarchy(Integer sponsorGroupId, Map<String, String> voObj) {
-        final String likeCriteria = new StringBuilder().append("%").append(voObj.get("searchString")).append("%").toString();
-        Query query = entityManager.createQuery("SELECT sponsor.sponsorCode, sponsor.sponsorName, sponsor.sponsorType.description, sponsor.acronym FROM Sponsor sponsor WHERE " +
-                "(sponsor.sponsorCode LIKE :searchWord OR sponsor.sponsorName LIKE :searchWord OR sponsor.acronym LIKE :searchWord) AND " +
-                        "sponsor.sponsorCode NOT IN (SELECT hierarchy.sponsorCode FROM SponsorHierarchy hierarchy " +
-                        "WHERE hierarchy.sponsorRootGroupId = :sponsorGroupId AND hierarchy.sponsorCode IS NOT NULL)");
-        query.setParameter("sponsorGroupId", sponsorGroupId);
-        query.setParameter("searchWord", likeCriteria);
-        if(voObj.get("fetchLimit") != null) {
-            query.setMaxResults(Integer.parseInt(voObj.get("fetchLimit")));
-        }
-        return query.getResultList();
-    }
+	public List<Object> findAllSponsors(Map<String, String> voObj) {
+		final String likeCriteria = "%" + voObj.get("searchString") + "%";
+		CriteriaBuilder builder = entityManager.getCriteriaBuilder();
+		CriteriaQuery<Object[]> criteriaQuery = builder.createQuery(Object[].class);
+		Root<Sponsor> sponsor = criteriaQuery.from(Sponsor.class);
+		criteriaQuery.multiselect(sponsor.get("sponsorCode"), sponsor.get("sponsorName"),
+				sponsor.get("sponsorType").get("description"), sponsor.get("acronym"));
+		Predicate likeCondition = builder.or(builder.like(sponsor.get("sponsorCode"), likeCriteria),
+				builder.like(sponsor.get("sponsorName"), likeCriteria),
+				builder.like(sponsor.get("acronym"), likeCriteria));
+		criteriaQuery.where(likeCondition);
+		TypedQuery<Object[]> query = entityManager.createQuery(criteriaQuery);
+		if (voObj.get("fetchLimit") != null) {
+			query.setMaxResults(Integer.parseInt(voObj.get("fetchLimit")));
+		}
+		List<Object[]> resultList = query.getResultList();
+		List<Object> result = new ArrayList<>(resultList.size());
+		for (Object[] obj : resultList) {
+			result.add(obj);
+		}
+		return result;
+	}
 
     @Override
     public List<Object> findAllDistinctSponsorGroupNameBySearchWord(String searchWord) {

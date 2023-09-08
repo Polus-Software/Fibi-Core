@@ -85,6 +85,8 @@ public class ParameterVO {
 	
 	private List<LockConfiguration> lockConfiguration;
 
+	private Boolean isElasticsyncSQSEnable;
+
 	public Boolean getIsOrcidWOrkEnabled() {
 		return isOrcidWOrkEnabled;
 	}
@@ -395,6 +397,14 @@ public class ParameterVO {
 
 	public void setLockConfiguration(List<LockConfiguration> lockConfiguration) {
 		this.lockConfiguration = lockConfiguration;
+	}
+
+	public Boolean getIsElasticsyncSQSEnable() {
+		return isElasticsyncSQSEnable;
+	}
+
+	public void setIsElasticsyncSQSEnable(Boolean isElasticsyncSQSEnable) {
+		this.isElasticsyncSQSEnable = isElasticsyncSQSEnable;
 	}
 
 }

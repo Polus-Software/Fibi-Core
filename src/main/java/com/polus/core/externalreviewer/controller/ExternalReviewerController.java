@@ -20,6 +20,9 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.polus.core.common.dto.ElasticQueueRequest;
+import com.polus.core.common.service.ElasticSyncOperation;
+import com.polus.core.constants.Constants;
 import com.polus.core.externalreviewer.pojo.ExtReviewerAffiliation;
 import com.polus.core.externalreviewer.pojo.SpecialismKeyword;
 import com.polus.core.externalreviewer.service.ExternalReviewerService;
@@ -35,18 +38,28 @@ public class ExternalReviewerController {
 	@Autowired
 	public ExternalReviewerService externalReviewerService;
 
+	@Autowired
+	private ElasticQueueRequest elasticQueueRequest;
+
+	@Autowired
+	private ElasticSyncOperation elasticSyncOperation;
+
 	@PostMapping(value = "/saveOrUpdateExtReviewer")
 	public String saveOrUpdateExtReviewer(@RequestBody ExternalReviewerVo vo) {
 		logger.info("Request for saveOrUpdateExtReviewer");
-		return externalReviewerService.saveOrUpdateReviewerDetails(vo);
+		String reviewerResponse = externalReviewerService.saveOrUpdateReviewerDetails(vo);
+		elasticSyncOperation.initiateSyncForElasticQueueRequestList(elasticQueueRequest);
+		return reviewerResponse;
 	}
-	
+
 	@PostMapping(value = "/saveOrUpdateAdditionalDetails")
 	public String saveOrUpdateAdditionalDetails(@RequestBody ExternalReviewerVo vo) {
 		logger.info("Request for saveOrUpdateAdditionalDetails");
-		return externalReviewerService.saveOrUpdateAdditionalDetails(vo);
+		String reviewerResponse = externalReviewerService.saveOrUpdateuserAccess(vo);
+		elasticSyncOperation.initiateSyncForElasticQueueRequest(vo.getExternalReviewerRight().getExternalReviewerId().toString(), elasticQueueRequest.getActionType(), Constants.ELASTIC_INDEX_REVIEWER);
+		return reviewerResponse;
 	}
-	
+
 	@PostMapping(value = "/saveOrUpdateuserAccess")
 	public String saveOrUpdateuserAccess(@RequestBody ExternalReviewerVo vo) {
 		logger.info("Request for saveOrUpdateuserAccess");

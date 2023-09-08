@@ -6,6 +6,7 @@ import java.sql.Timestamp;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.EntityListeners;
 import javax.persistence.ForeignKey;
 import javax.persistence.Id;
 import javax.persistence.IdClass;
@@ -20,12 +21,16 @@ import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.springframework.data.annotation.LastModifiedBy;
+import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
 
 @Entity
 @Table(name = "UNIT_ADMINISTRATOR")
 @IdClass(UnitAdministrator.UnitAdministratorId.class)
+@EntityListeners(AuditingEntityListener.class)
 public class UnitAdministrator implements Serializable {
 
 	private static final long serialVersionUID = 1L;
@@ -51,13 +56,15 @@ public class UnitAdministrator implements Serializable {
 	@Id
 	@Column(name = "UNIT_NUMBER")
 	private String unitNumber;
-	
+
 	@Transient
 	private String unitName;
 
+	@LastModifiedDate
 	@Column(name = "UPDATE_TIMESTAMP")
 	private Timestamp updateTimestamp;
 
+	@LastModifiedBy
 	@Column(name = "UPDATE_USER")
 	private String updateUser;
 

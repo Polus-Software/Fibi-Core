@@ -2,6 +2,7 @@ package com.polus.core.persontraining.controller;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.validation.Valid;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -36,7 +37,7 @@ public class PersonTrainingController {
 	}
 	
 	@PostMapping(value = "/getTrainingDashboard")
-	public String getTrainingDashboard(@RequestBody PersonVO vo) {
+	public String getTrainingDashboard(@Valid @RequestBody PersonVO vo) {
 		logger.info("Request for getTrainingDashboard");
 		return personTrainingService.getTrainingDashboard(vo);
 	}

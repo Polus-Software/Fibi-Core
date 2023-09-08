@@ -157,10 +157,9 @@ public class AdminPortalContoller {
 		return sponsorHierarchyService.deleteSponsorHierarchy(sponsorGroupId);
 	}
 
-	@PostMapping("/sponsorHierarchy/{rootGroupId}/sponsors")
-	public ResponseEntity<Object> getNotAddedSponsorsInSH(@PathVariable("rootGroupId") Integer rootGroupId,
-																@RequestBody Map<String, String> voObj) {
-		return sponsorHierarchyService.getNotAddedSponsorsInSH(rootGroupId, voObj);
+	@PostMapping("/sponsorHierarchy/sponsors")
+	public ResponseEntity<Object> getSponsors(@RequestBody Map<String, String> voObj) {
+		return sponsorHierarchyService.getSponsors(voObj);
 	}
 
 	@GetMapping( "/sponsorHierarchies")

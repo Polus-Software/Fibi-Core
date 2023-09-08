@@ -5,6 +5,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.validation.constraints.Pattern;
+
 import com.polus.core.person.pojo.Person;
 import com.polus.core.person.pojo.PersonDegree;
 import com.polus.core.persontraining.pojo.PersonTraining;
@@ -14,7 +16,8 @@ import com.polus.core.persontraining.pojo.PersonTrainingComment;
 public class PersonVO {
 	
 	private Person person;
-	
+
+	@Pattern(regexp="^$|[0-9a-zA-Z _]*$", message="personId must not include special characters.")
 	private String personId;
 	
 	private String acType;

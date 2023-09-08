@@ -26,8 +26,6 @@ import com.polus.core.constants.Constants;
 import com.polus.core.externaluser.pojo.ExternalUser;
 import com.polus.core.externaluser.pojo.ExternalUserFeed;
 import com.polus.core.person.pojo.Person;
-import com.polus.core.person.pojo.PersonRoleRT;
-import com.polus.core.person.pojo.PersonRoleRTAttributes;
 import com.polus.core.roles.pojo.PersonRoles;
 import com.polus.core.roles.pojo.Rights;
 
@@ -193,46 +191,6 @@ public class ExternalUserDaoImpl implements ExternalUserDao {
 	}
 
 	@Override
-	public void assignPersonRoleRT(Person person, Integer roleId) {
-		try {
-			List<Rights> personRights = getPersonRightFromRole(roleId);
-			if (personRights != null) {
-				for (Rights right : personRights) {
-					logger.info("Person Id: {}", person.getPersonId());
-					logger.info("Right Name: {}", right.getRightName());
-					logger.info("Home Unit: {}", person.getHomeUnit());
-					if (checkRightForPersonRoleRT(person.getHomeUnit(), person.getPersonId(), roleId, right.getRightName())) {
-						PersonRoleRT personRoleRT = new PersonRoleRT();
-						PersonRoleRTAttributes personRoleRTAttributes = new PersonRoleRTAttributes();
-						personRoleRT.setRoleId(roleId);
-						personRoleRTAttributes.setPersonId(person.getPersonId());
-						personRoleRTAttributes.setUnitNumber(person.getHomeUnit());
-						personRoleRTAttributes.setRightName(right.getRightName());
-						personRoleRT.setPersonRoleRTAttributes(personRoleRTAttributes);
-						hibernateTemplate.saveOrUpdate(personRoleRT);
-					}
-				}
-			}
-		} catch (Exception e) {
-			logger.info("Exception in assignPersonRoleRT : {}", e);
-			e.printStackTrace();
-		}
-	}
-
-	private boolean checkRightForPersonRoleRT(String homeUnit, String personId, Integer roleId, String rightName) {
-		Session session = hibernateTemplate.getSessionFactory().getCurrentSession();
-		StringBuilder hqlQuery = new StringBuilder("select count(*) from PersonRoleRT where personRoleRTAttributes.personId =: personId and ").
-				append("personRoleRTAttributes.unitNumber =: unitNumber and roleId =: roleId and personRoleRTAttributes.rightName =: rightName");		
-		Query query = session.createQuery(hqlQuery.toString());
-		query.setParameter("personId", personId);
-		query.setParameter("unitNumber", homeUnit);
-		query.setParameter("roleId", roleId);
-		query.setParameter("rightName", rightName);
-		Integer count = Integer.parseInt(query.getSingleResult().toString());
-		return count == 0 ? true : false;
-	}
-
-	@Override
 	public String getHomeUnitFromOrganizationId(String organizationId) {
 		String unit = null;
 		try {
@@ -267,21 +225,6 @@ public class ExternalUserDaoImpl implements ExternalUserDao {
 		nextSequenceId = getNextSeqMySql("SELECT IFNULL(MAX(CONVERT(PERSON_ID, SIGNED INTEGER)),100)+1 FROM PERSON");
 		logger.info("getNextSeq : " + nextSequenceId);
 		return nextSequenceId;
-	}
-
-	@SuppressWarnings("unchecked")
-	@Override
-	public List<String> getUnitsListByPersonIdAndRights(String personId) {
-		Session session = hibernateTemplate.getSessionFactory().getCurrentSession();
-		String hqlQuery = "SELECT T1.personRoleRTAttributes.unitNumber from PersonRoleRT T1 where T1.personRoleRTAttributes.personId =:personId and T1.personRoleRTAttributes.rightName =:rightName";
-		Query query = session.createQuery(hqlQuery);
-		query.setParameter("personId", personId);
-		query.setParameter("rightName", "MAINTAIN_EXTERNAL_USER");
-		List<String> units = query.getResultList();
-		if (units != null && !units.isEmpty()) {
-			return units;
-		}
-		return null;
 	}
 
 	private String getNextSeqMySql(String sql) {

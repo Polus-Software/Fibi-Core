@@ -52,13 +52,13 @@ public interface SponsorHierarchyService {
     ResponseEntity<ResponseData> deleteSponsorHierarchy(Integer sponsorGroupId);
 
     /**
-     * Get All Not Added Sponsors In Sponsor Hierarchy Table
-     *
-     * @param rootGroupId
-     * @param voObj
-     * @return
-     */
-    ResponseEntity<Object> getNotAddedSponsorsInSH(Integer rootGroupId, Map<String, String> voObj);
+      * Get All Sponsors
+      *
+      * @param rootGroupId
+      * @param voObj
+      * @return
+      */
+    ResponseEntity<Object> getSponsors(Map<String, String> voObj);
 
     /**
      * Get Sponsor Hierarchies

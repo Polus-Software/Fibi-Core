@@ -12,6 +12,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.polus.core.common.dto.ElasticQueueRequest;
+import com.polus.core.common.service.ElasticSyncOperation;
 import com.polus.core.pojo.Country;
 import com.polus.core.rolodex.service.RolodexService;
 import com.polus.core.rolodex.vo.RolodexSearchResult;
@@ -26,10 +28,18 @@ public class RolodexController {
 	@Autowired
 	private RolodexService rolodexService;
 
+	@Autowired
+	private ElasticSyncOperation elasticSyncOperation;
+		
+	@Autowired
+	private ElasticQueueRequest elasticQueueRequest;
+
 	@PostMapping(value = "/saveOrUpdateRolodex")
 	public String createRolodex(@RequestBody RolodexVO vo, HttpServletRequest request, HttpServletResponse response) {
 		logger.info("Request for saveOrUpdateRolodex");
-		return rolodexService.saveOrUpdateRolodex(vo);
+		String rolodexResponse = rolodexService.saveOrUpdateRolodex(vo);
+		elasticSyncOperation.initiateSyncForElasticQueueRequestList(elasticQueueRequest);
+		return rolodexResponse;
 	}
 
 	@PostMapping(value = "/findRolodex")

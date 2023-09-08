@@ -28,6 +28,7 @@ import com.polus.core.person.delegation.delegationDao.DelegationDao;
 import com.polus.core.person.delegation.pojo.Delegations;
 import com.polus.core.person.delegation.vo.DelegationVO;
 import com.polus.core.person.pojo.Person;
+import com.polus.core.roles.dao.PersonRoleRightDao;
 import com.polus.core.security.AuthenticatedUser;
 
 @Transactional
@@ -57,6 +58,9 @@ protected static Logger logger = LogManager.getLogger(DelegationServiceImpl.clas
 	@Autowired
 	private EmailService emailService;
 
+	@Autowired
+	private PersonRoleRightDao personRoleRightDao;
+
 	@Value("${spring.application.name}")
 	private String applicationURL;
 
@@ -75,7 +79,7 @@ protected static Logger logger = LogManager.getLogger(DelegationServiceImpl.clas
 		Boolean isMaintainDelegationRightExist = Boolean.FALSE;
 		String unitNumber = personDao.getPersonUnitNumberByPersonId(vo.getPersonId());
 		if (unitNumber != null) {
-			isMaintainDelegationRightExist = personDao.isPersonHasPermission(AuthenticatedUser.getLoginPersonId(), Constants.MAINTAIN_DELEGATION_RIGHT_NAME, unitNumber);	
+			isMaintainDelegationRightExist = personRoleRightDao.isPersonHasPermission(AuthenticatedUser.getLoginPersonId(), Constants.MAINTAIN_DELEGATION_RIGHT_NAME, unitNumber);	
 			vo.setIsMaintainDelegationRightExist(isMaintainDelegationRightExist);
 		}
 		if (delegation.getDelegationId() == null) {
@@ -169,7 +173,7 @@ protected static Logger logger = LogManager.getLogger(DelegationServiceImpl.clas
 		Boolean isMaintainDelegationRightExist = Boolean.FALSE;
 		String unitNumber = personDao.getPersonUnitNumberByPersonId(delegationPersonId);
 		if (unitNumber != null) {
-			isMaintainDelegationRightExist = personDao.isPersonHasPermission(AuthenticatedUser.getLoginPersonId(), Constants.MAINTAIN_DELEGATION_RIGHT_NAME, unitNumber);	
+			isMaintainDelegationRightExist = personRoleRightDao.isPersonHasPermission(AuthenticatedUser.getLoginPersonId(), Constants.MAINTAIN_DELEGATION_RIGHT_NAME, unitNumber);	
 			vo.setIsMaintainDelegationRightExist(isMaintainDelegationRightExist);
 		}
 		List<String> delegationStatusCode = new ArrayList<>();
