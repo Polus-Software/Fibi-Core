@@ -98,6 +98,9 @@ public class CommonDaoImpl implements CommonDao {
 	@Value("${system.timezone}")
 	private String timezone;
 
+	private static final String UNIT_NAME = "unitName";
+	private static final String UNIT_NUMBER = "unitNumber";
+
 	@Override
 	public Long getNextSequenceNumber(String sequenceName) {
 		Query update = hibernateTemplate.getSessionFactory().getCurrentSession().createSQLQuery("update SEQ_IP_ID_GNTR set NEXT_VAL = NEXT_VAL+1");
@@ -841,6 +844,20 @@ public class CommonDaoImpl implements CommonDao {
 		Root<FileType> root = criteriaQuery.from(FileType.class);
 		criteriaQuery.select(root).where(criteriaBuilder.equal(root.get("fileType"), fileType));
 		return session.createQuery(criteriaQuery).getResultList();
+	}
+
+	@Override
+	public List<Unit> getAllUnits(String searchString) {
+		Session session = hibernateTemplate.getSessionFactory().getCurrentSession();
+		CriteriaBuilder builder = session.getCriteriaBuilder();
+		CriteriaQuery<Unit> query = builder.createQuery(Unit.class);
+		Root<Unit> rootUnit = query.from(Unit.class);
+		Predicate unitName = builder.like(builder.lower(rootUnit.get(UNIT_NAME)), "%" + searchString.toLowerCase() + "%");
+		Predicate unitNumber = builder.like(rootUnit.get(UNIT_NUMBER), "%" + searchString + "%");
+		query.where(builder.or(unitName, unitNumber));
+		query.select(builder.construct(Unit.class, rootUnit.get(UNIT_NUMBER), rootUnit.get(UNIT_NAME)));
+		query.orderBy(builder.asc(rootUnit.get(UNIT_NAME)));
+		return session.createQuery(query).getResultList();
 	}
 
 }

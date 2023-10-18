@@ -11,6 +11,7 @@ public class UnitHierarchy {
 	public String unitNumber;
 	public String unitName;
 	public String parentUnitNumber;
+	public String active;
 	public ArrayList<UnitHierarchy> childUnits;
 	
 	public String getUnitNumber() {
@@ -36,6 +37,12 @@ public class UnitHierarchy {
 	}
 	public void setChildUnits(ArrayList<UnitHierarchy> childUnits) {
 		this.childUnits = childUnits;
+	}
+	public String getActive() {
+		return active;
+	}
+	public void setActive(String active) {
+		this.active = active;
 	}
 	
 }

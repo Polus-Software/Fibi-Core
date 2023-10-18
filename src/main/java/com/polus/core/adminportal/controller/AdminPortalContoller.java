@@ -31,6 +31,7 @@ import com.polus.core.adminportal.vo.RateLaVO;
 import com.polus.core.adminportal.vo.RateVO;
 import com.polus.core.adminportal.vo.UnitHierarchyVO;
 import com.polus.core.adminportal.vo.UnitVO;
+import com.polus.core.common.dao.CommonDao;
 import com.polus.core.common.dto.ResponseData;
 import com.polus.core.constants.Constants;
 import com.polus.core.vo.SearchResult;
@@ -50,11 +51,14 @@ public class AdminPortalContoller {
 	@Autowired
 	SponsorHierarchyService sponsorHierarchyService;
 
+	@Autowired
+	CommonDao commonDao;
+
 	@RequestMapping(value = "/getUnitHierarchy", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
 	public String getUnitHierarchy(HttpServletRequest request, HttpServletResponse response) {
 		logger.info("Requesting for get unit hierarchy");
-		 logger.info("Root unit number :" + Constants.ROOT_UNIT);
-         return unitHierarchyService.getUnitHierarchy(Constants.ROOT_UNIT);
+		logger.info("Root unit number :" + Constants.ROOT_UNIT);
+        return commonDao.convertObjectToJSON(unitHierarchyService.getUnitHierarchy(Constants.ROOT_UNIT));
 
 	}
 	@RequestMapping(value = "/getUnitsList", method = RequestMethod.GET)
@@ -170,5 +174,11 @@ public class AdminPortalContoller {
 	@PostMapping( "/sponsorHierarchy/sponsorGroups")
 	public ResponseEntity<Object> getAllGroups(@RequestBody(required = false) Map<String, String> searchWord) {
 		return sponsorHierarchyService.getAllSponsorHierarchyGroups(searchWord.get("searchString"));
+	}
+
+	@PostMapping(value = "/activateOrDeactivateUnit")
+	public String activateOrDeactivateUnit(@RequestBody UnitHierarchyVO vo) {
+		logger.info("ActivateOrDeactivateParentUnitAndChild");
+		return unitHierarchyService.activateOrDeactivateUnit(vo.getUnitNumber(), vo.getAcType());
 	}
 }

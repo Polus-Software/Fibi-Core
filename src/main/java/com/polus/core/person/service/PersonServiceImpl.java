@@ -111,7 +111,7 @@ public class PersonServiceImpl implements PersonService {
 						logger.info("getNextSeq : " + nextSequenceId);
 						person.setPersonId(nextSequenceId);
 					}
-					if (person.getStatus().equalsIgnoreCase("I")) {
+					if (person.getStatus().equalsIgnoreCase("I") && !personDao.checkForPersonInactive(person.getPersonId())) {
 						person.setDateOfInactive(commonDao.getCurrentTimestamp());
 					}
 					person = personDao.saveOrUpdatePerson(person);

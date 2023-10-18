@@ -23,6 +23,7 @@ import com.polus.core.notification.pojo.NotificationRecipient;
 import com.polus.core.pojo.Country;
 import com.polus.core.pojo.ResearchTypeArea;
 import com.polus.core.pojo.ResearchTypeSubArea;
+import com.polus.core.pojo.Unit;
 import com.polus.core.vo.CommonVO;
 import com.polus.core.vo.LookUp;
 
@@ -298,4 +299,10 @@ public interface CommonService {
 
 	public ResponseEntity<byte[]> getResponseEntityForDownload(CommonVO vo, XSSFWorkbook workbook) throws Exception;
 
+	/**
+	 * This method is used to get all units
+	 * @param searchString
+	 * @return
+	 */
+	public List<Unit> getAllUnits(String searchString);
 }

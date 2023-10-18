@@ -94,6 +94,7 @@ import com.polus.core.pojo.LetterTemplateType;
 import com.polus.core.pojo.LookupWindow;
 import com.polus.core.pojo.ResearchTypeArea;
 import com.polus.core.pojo.ResearchTypeSubArea;
+import com.polus.core.pojo.Unit;
 import com.polus.core.util.Truth;
 import com.polus.core.util.VmlDrawing;
 import com.polus.core.vo.CommonVO;
@@ -890,6 +891,11 @@ public class CommonServiceImpl implements CommonService {
 			logger.error("Error in method getResponseEntity", e);
 		}
 		return attachmentData;
+	}
+
+	@Override
+	public List<Unit> getAllUnits(String searchString) {
+		return commonDao.getAllUnits(searchString);
 	}
 
 }

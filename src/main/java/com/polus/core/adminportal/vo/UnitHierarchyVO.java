@@ -10,6 +10,8 @@ public class UnitHierarchyVO {
 	private String unitNumber;
 	private List<UnitHierarchy> unitHierarchyList;
 	private List<UnitAdministratorType> unitAdministratorTypeList;
+	private String acType;
+	private  List<String> childUnitNumber;
 
 	public String getUnitNumber() {
 		return unitNumber;
@@ -33,6 +35,22 @@ public class UnitHierarchyVO {
 	
 	public void setUnitAdministratorTypeList(List<UnitAdministratorType> unitAdministratorTypeList) {
 		this.unitAdministratorTypeList = unitAdministratorTypeList;
+	}
+
+	public String getAcType() {
+		return acType;
+	}
+
+	public void setAcType(String acType) {
+		this.acType = acType;
+	}
+
+	public List<String> getChildUnitNumber() {
+		return childUnitNumber;
+	}
+
+	public void setChildUnitNumber(List<String> childUnitNumber) {
+		this.childUnitNumber = childUnitNumber;
 	}
 	
 	}

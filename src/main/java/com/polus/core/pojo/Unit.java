@@ -100,6 +100,13 @@ public class Unit implements Serializable {
 		this.unitName = unitName;
 	}
 
+	public Unit(String unitNumber, String unitName, Boolean active) {
+		super();
+		this.unitNumber = unitNumber;
+		this.unitName = unitName;
+		this.active = active;
+	}
+
 	public String getUnitNumber() {
 		return unitNumber;
 	}

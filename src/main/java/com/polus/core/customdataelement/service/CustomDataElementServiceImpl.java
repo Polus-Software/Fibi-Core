@@ -184,15 +184,11 @@ public class CustomDataElementServiceImpl implements CustomDataElementService {
 						customData.setVersionNumber(customElement.getVersionNumber());
 						customData.setUpdateTimestamp(vo.getUpdateTimestamp());
 						customData.setUpdateUser(vo.getUpdateUser());
-						if (customElement.getDataType().equals(Constants.CUSTOM_DATA_TYPE_CHECKBOX)) {
-							if (customData.getCustomDataId() != null && customData.getValue() == null) {
-								customDataElementDao.deleteOptionResponse(answer.getCustomDataId());
-								customData.setCustomDataId(null);
-							} else if (customData.getDescription() != null && customData.getValue() != null ) {
-								customData = customDataElementDao.saveOrUpdateCustomResponse(customData);
-							}
-						} else {
-							customData = customDataElementDao.saveOrUpdateCustomResponse(customData);
+						if (customData.getCustomDataId() != null && (customData.getValue() == null || customData.getValue().isEmpty())) {
+							customDataElementDao.deleteOptionResponse(answer.getCustomDataId());
+							customData.setCustomDataId(null);
+						} else if (customData.getValue() != null) {
+							customDataElementDao.saveOrUpdateCustomResponse(customData);
 						}
 						answer.setCustomDataId(customData.getCustomDataId());
 					}
@@ -402,7 +398,7 @@ public class CustomDataElementServiceImpl implements CustomDataElementService {
 		for (CustomData answer : answers) {
 			if (awardAnswers.isEmpty()) {
 				createAndSaveCustomData(answer, subModuleItemKey, subModuleCode, updateUser, usage.getCustomDataElement().getDefaultValue(), usage.getCustomDataElement().getDataType());
-			} else {
+			}/* else {
 				if (!isAnswerExist) {
 					for (CustomData awardAnswer : awardAnswers) {
 						if (answers.indexOf(answer) == (awardAnswers.indexOf(awardAnswer))) {
@@ -410,7 +406,7 @@ public class CustomDataElementServiceImpl implements CustomDataElementService {
 						}
 					}
 				}
-			}
+			}*/
 		}
 	}
 

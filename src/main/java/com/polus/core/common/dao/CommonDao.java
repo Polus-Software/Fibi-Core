@@ -533,4 +533,11 @@ public interface CommonDao {
 	 */
 	public List<FileType> getAcceptedExtensions(String fileType);
 
+	/**
+	 * This method is used to get both active and inactive units
+	 * @param searchString
+	 * @return
+	 */
+	public List<Unit> getAllUnits(String searchString);
+
 }
