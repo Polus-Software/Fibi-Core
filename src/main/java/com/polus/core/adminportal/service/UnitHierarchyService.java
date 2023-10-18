@@ -16,7 +16,7 @@ public interface UnitHierarchyService {
 	 * @param unit
 	 * @return it returns unit hierarchy list with administrator types.
 	 */
-	public String getUnitHierarchy(String unitNumber);
+	public UnitHierarchyVO getUnitHierarchy(String unitNumber);
 
 	/**
 	 * This method is used for get search result
@@ -99,4 +99,11 @@ public interface UnitHierarchyService {
 	 */
 	public String deleteLARate(RateLaVO rateLaVO);
 
+	/**
+	 * This method is used to activate a unit or deactivate a unit and its Child Units
+	 * @param unitNumber
+	 * @param acType
+	 * @return
+	 */
+	public String activateOrDeactivateUnit(String unitNumber,  String acType);
 }

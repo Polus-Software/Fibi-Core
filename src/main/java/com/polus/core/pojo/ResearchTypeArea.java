@@ -44,6 +44,9 @@ public class ResearchTypeArea implements Serializable {
 	@Column(name = "UPDATE_USER")
 	private String updateUser;
 
+	@Column(name = "STYLED_AREA_OF_RESEARCH")
+	private String 	styledAreaOfResearch;
+
 	public String getDescription() {
 		return description;
 	}
@@ -98,6 +101,14 @@ public class ResearchTypeArea implements Serializable {
 
 	public void setResearchTypeAreaCode(String researchTypeAreaCode) {
 		this.researchTypeAreaCode = researchTypeAreaCode;
+	}
+
+	public String getStyledAreaOfResearch() {
+		return styledAreaOfResearch;
+	}
+
+	public void setStyledAreaOfResearch(String styledAreaOfResearch) {
+		this.styledAreaOfResearch = styledAreaOfResearch;
 	}
 	
 }

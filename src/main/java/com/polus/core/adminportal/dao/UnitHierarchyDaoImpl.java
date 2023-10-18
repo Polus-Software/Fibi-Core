@@ -11,7 +11,9 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import javax.persistence.Query;
 import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.CriteriaUpdate;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
@@ -24,11 +26,8 @@ import org.hibernate.criterion.Criterion;
 import org.hibernate.criterion.LogicalExpression;
 import org.hibernate.criterion.MatchMode;
 import org.hibernate.criterion.Order;
-import org.hibernate.criterion.ProjectionList;
-import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.internal.SessionImpl;
-import org.hibernate.transform.Transformers;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.orm.hibernate5.HibernateTemplate;
@@ -51,6 +50,7 @@ import com.polus.core.pojo.ActivityType;
 import com.polus.core.pojo.Unit;
 import com.polus.core.pojo.UnitAdministrator;
 import com.polus.core.pojo.UnitAdministratorType;
+
 import oracle.jdbc.OracleTypes;
 
 @SuppressWarnings("deprecation")
@@ -102,6 +102,7 @@ public class UnitHierarchyDaoImpl implements UnitHierarchyDao {
 				detailsField.put("unit_name", resultSet.getString("unit_name"));
 				detailsField.put("parent_unit_number", resultSet.getString("parent_unit_number"));
 				detailsField.put("lvl", resultSet.getString("lvl"));
+				detailsField.put("active_flag", resultSet.getString("active_flag"));
 				unitList.add(detailsField);
 			}
 			if (unitList != null && !unitList.isEmpty()) {
@@ -113,6 +114,7 @@ public class UnitHierarchyDaoImpl implements UnitHierarchyDao {
 					unitHierarchy.setUnitName((String) hmResult.get("unit_name"));
 					unitHierarchy.setUnitNumber((String) hmResult.get("unit_number"));
 					unitHierarchy.setParentUnitNumber((String) hmResult.get("parent_unit_number"));
+					unitHierarchy.setActive((String) hmResult.get("active_flag"));
 					if(!(unitHierarchy.getParentUnitNumber() != null)) {
 						rootUnits.add(unitHierarchy.getUnitNumber());
 					}
@@ -165,16 +167,13 @@ public class UnitHierarchyDaoImpl implements UnitHierarchyDao {
 	public List<Unit> getUnitsList() {
 		logger.info("-------- getUnitsListDAO ---------");
 		Session session = hibernateTemplate.getSessionFactory().getCurrentSession();
-		Criteria criteria = session.createCriteria(Unit.class);
-		ProjectionList projectionList = Projections.projectionList();
-        projectionList.add(Projections.groupProperty("unitNumber"),"unitNumber");
-        projectionList.add(Projections.property("unitName"),"unitName");
-        criteria.setProjection(projectionList);
-        criteria.setResultTransformer(Transformers.aliasToBean(Unit.class)); 
-		criteria.addOrder(Order.asc("unitNumber"));
-		@SuppressWarnings("unchecked")
-		List<Unit> unitList = criteria.list();
-		return unitList;
+	    CriteriaBuilder criteriaBuilder = session.getCriteriaBuilder();
+	    CriteriaQuery<Unit> criteriaQuery = criteriaBuilder.createQuery(Unit.class);
+	    Root<Unit> root = criteriaQuery.from(Unit.class);
+	    criteriaQuery.multiselect(root.get("unitNumber"), root.get("unitName"), root.get("active"));
+	    criteriaQuery.orderBy(criteriaBuilder.asc(root.get("unitNumber")));
+	    List<Unit> unitList = session.createQuery(criteriaQuery).getResultList();
+	    return unitList;
 	}
 
 	public UnitVO getUnitDetails(UnitHierarchyVO vo) {
@@ -529,5 +528,41 @@ public class UnitHierarchyDaoImpl implements UnitHierarchyDao {
 				logger.error("Error occured while closing callable statement for syncUnitWithChildrenAndPersonRole : {}", e.getMessage());
 			}
 		}
+	}
+
+	@Override
+	public void activateUnit(String unitNumber) {
+		Session session = hibernateTemplate.getSessionFactory().getCurrentSession();
+		CriteriaBuilder builder = session.getCriteriaBuilder();
+		CriteriaUpdate<Unit> updateCriteria = builder.createCriteriaUpdate(Unit.class);
+		Root<Unit> root = updateCriteria.from(Unit.class);
+		updateCriteria.set("active", true);
+		updateCriteria.set("updateTimestamp", commonDao.getCurrentTimestamp());
+		updateCriteria.where(builder.equal(root.get("unitNumber"), unitNumber));
+		session.createQuery(updateCriteria).executeUpdate();
+	}
+
+	@Override
+	public void deactivateParentAndChildUnits(List<String> unitNumbers) {
+		Session session = hibernateTemplate.getSessionFactory().getCurrentSession();
+		CriteriaBuilder builder = session.getCriteriaBuilder();
+		CriteriaUpdate<Unit> updateCriteria = builder.createCriteriaUpdate(Unit.class);
+		Root<Unit> root = updateCriteria.from(Unit.class);
+		updateCriteria.set("active", false);
+		updateCriteria.set("updateTimestamp", commonDao.getCurrentTimestamp());
+		updateCriteria.where(root.get("unitNumber").in(unitNumbers));
+		session.createQuery(updateCriteria).executeUpdate();
+	}
+
+	@Override
+	public List<String> getChildUnitNumbersBasedOnParentUnitNumber(String unitNumber) {
+		Session session = hibernateTemplate.getSessionFactory().getCurrentSession();
+		StringBuilder hqlQueryBuilder = new StringBuilder();
+		hqlQueryBuilder.append("SELECT uwc.childUnitNumber FROM UnitWithChildren uwc ")
+				.append("WHERE uwc.unitNumber = :unitNumber AND uwc.childUnitNumber IN ")
+				.append("(SELECT u.unitNumber FROM Unit u WHERE u.unitNumber = uwc.childUnitNumber AND u.active = true)");
+		Query query = session.createQuery(hqlQueryBuilder.toString());
+		query.setParameter("unitNumber", unitNumber);
+		return query.getResultList();
 	}
 }

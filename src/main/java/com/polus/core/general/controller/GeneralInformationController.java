@@ -34,6 +34,7 @@ import com.polus.core.common.service.CommonService;
 import com.polus.core.general.service.GeneralInformationService;
 import com.polus.core.pojo.ResearchTypeArea;
 import com.polus.core.pojo.ResearchTypeSubArea;
+import com.polus.core.pojo.Unit;
 import com.polus.core.vo.CommonVO;
 import com.polus.core.vo.SponsorMaintenanceVO;
 
@@ -184,4 +185,11 @@ public class GeneralInformationController {
             @RequestBody ApplicationExceptionVO applicationExceptionVO) throws Exception {
         return applicationExceptionService.getElasticErrorDetails(applicationExceptionVO);
     }
+
+	@PostMapping(value = "/getAllUnits")
+	public List<Unit> getAllUnits(@RequestBody CommonVO vo, HttpServletRequest request, HttpServletResponse response) {
+		logger.info("Requesting for getting all units");
+		logger.info("searchString : {}", vo.getSearchString());
+		return commonService.getAllUnits(vo.getSearchString());
+	}
 }

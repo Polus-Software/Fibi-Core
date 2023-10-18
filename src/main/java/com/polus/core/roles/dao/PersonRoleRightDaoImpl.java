@@ -67,7 +67,7 @@ public class PersonRoleRightDaoImpl implements PersonRoleRightDao {
 					.registerStoredProcedureParameter("AV_RIGHT_NAME", String.class, ParameterMode.IN)
 					.setParameter("AV_RIGHT_NAME", String.join(",", rightName))
 					.registerStoredProcedureParameter("AV_UNIT_NUMBER", String.class, ParameterMode.IN)
-					.setParameter("AV_UNIT_NUMBER", unitNumber)
+					.setParameter("AV_UNIT_NUMBER", unitNumber != null ? unitNumber : "")
 					.registerStoredProcedureParameter("AV_PERSON_ID", String.class, ParameterMode.IN)
 					.setParameter("AV_PERSON_ID", personId);
 			return query.getSingleResult().equals("TRUE") ? Boolean.TRUE : Boolean.FALSE;

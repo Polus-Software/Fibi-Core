@@ -1,6 +1,7 @@
 package com.polus.core.adminportal.service;
 
 import java.sql.Timestamp;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
@@ -43,13 +44,13 @@ public class UnitHierarchyServiceImpl implements UnitHierarchyService {
 	private static final String FAILURE = "failure";
 
 	@Override
-	public String getUnitHierarchy(String unitNumber) {
+	public UnitHierarchyVO getUnitHierarchy(String unitNumber) {
 		logger.info("-------- getUnitHierarchy serviceimpl---------");
 		UnitHierarchyVO unitHierarchyVO = new UnitHierarchyVO();
 		unitHierarchyVO.setUnitHierarchyList((unitHierarchyDao.getUnitHierarchy(unitNumber)));
 		unitHierarchyVO.setUnitAdministratorTypeList(unitHierarchyDao.getUnitAdministratorTypesList());
 		unitHierarchyVO.setUnitNumber(unitNumber);
-		return unitHierarchyDao.convertObjectToJSON(unitHierarchyVO);	
+		return unitHierarchyVO;	
 	}
 
 	@Override
@@ -205,5 +206,22 @@ public class UnitHierarchyServiceImpl implements UnitHierarchyService {
 		List<InstituteLARate> lArateList = unitHierarchyDao.getLARates(rateLaVO.getUnitNumber());
 		laRateVO.setInstituteLARatesList(lArateList);
 		return unitHierarchyDao.convertObjectToJSON(laRateVO);
+	}
+
+	@Override
+	public String activateOrDeactivateUnit(String unitNumber, String acType) {
+		List<String> childUnitNumbers = new ArrayList<>();
+		if (acType.equalsIgnoreCase("D")) {
+			childUnitNumbers = unitHierarchyDao.getChildUnitNumbersBasedOnParentUnitNumber(unitNumber);
+			unitHierarchyDao.deactivateParentAndChildUnits(childUnitNumbers);
+			if (childUnitNumbers != null && !childUnitNumbers.isEmpty()) {
+				childUnitNumbers.remove(unitNumber);
+			}
+		} else {
+			unitHierarchyDao.activateUnit(unitNumber);
+		}
+		UnitHierarchyVO vo = getUnitHierarchy(Constants.ROOT_UNIT);
+		vo.setChildUnitNumber(childUnitNumbers);
+		return commonDao.convertObjectToJSON(vo);
 	}
 }

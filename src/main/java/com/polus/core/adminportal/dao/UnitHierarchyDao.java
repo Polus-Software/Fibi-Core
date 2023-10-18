@@ -205,4 +205,24 @@ public interface UnitHierarchyDao {
 	 */
 	void syncUnitWithChildrenAndPersonRole(String unitNumber, String childUnitNumber, Boolean parentUnitChanged);
 
+	/**
+	 * This method is used to activate a particular unit
+	 * @param unitNumber
+	 */
+	public void activateUnit(String unitNumber);
+
+	/**
+	 * This method is used to deactivate parent and child units
+	 * @param unitNumbers
+	 * @param acType
+	 */
+	public void deactivateParentAndChildUnits(List<String> unitNumbers);
+
+	/**
+	 * This method is used to fetch child units of a particular parent
+	 * @param unitNumber
+	 * @return
+	 */
+	public List<String> getChildUnitNumbersBasedOnParentUnitNumber(String unitNumber);
+
 }
